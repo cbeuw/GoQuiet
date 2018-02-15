@@ -1,4 +1,4 @@
-# GoQuiet
+# [WIP]GoQuiet
 A shadowsocks plugin that simulates TLS handshake and masquerades as a normal webserver.
 
 ShadowsocksR's `tls1.2_ticket_auth` allows Shadowsocks' traffic to be preceived by the firewall as normal TLS traffic, 
