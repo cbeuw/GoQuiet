@@ -10,7 +10,7 @@ func TestParseClientHello(*testing.T) {
 	client_hello, err := ParseClientHello(good)
 	if err != nil {
 		fmt.Println(err)
-	} /*else {
+	} else {
 		fmt.Printf("%x\n", client_hello.extensions[[2]byte{0x00, 0x00}])
-	}*/
+	}
 }
