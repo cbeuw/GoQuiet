@@ -7,13 +7,6 @@ import (
 	"math/rand"
 )
 
-type RecordLayer struct {
-	content_type byte
-	version      []byte
-	length       int
-	data         []byte
-}
-
 type ClientHello struct {
 	handshake_type          byte
 	length                  int
@@ -53,6 +46,7 @@ func parseExtensions(input []byte) (ret map[[2]byte][]byte, err error) {
 }
 
 func peelRecordLayer(data []byte) (ret []byte, err error) {
+	ret = data[5:]
 	return
 }
 func ParseClientHello(data []byte) (ret *ClientHello, err error) {
