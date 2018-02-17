@@ -15,6 +15,7 @@ type Conf struct {
 }
 
 var Config Conf
+var UsedRandom map[[32]byte]int
 
 func ParseConfig(filepath string) (err error) {
 	content, err := ioutil.ReadFile(filepath)

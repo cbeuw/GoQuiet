@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -27,20 +28,19 @@ type WebPair struct {
 	remote    net.Conn
 }
 
-func readTillDrain(conn net.Conn) []byte {
+func readTillDrain(conn net.Conn) (ret []byte, err error) {
 	t := time.Now()
 	t = t.Add(3 * time.Second)
 	conn.SetReadDeadline(t) // 3 seconds
-	var buf []byte
-	conn.Read(buf)
-	msglen := gqserver.BtoInt(buf[3:5])
-	for len(buf) < msglen {
+	_, err = conn.Read(ret)
+	msglen := gqserver.BtoInt(ret[3:5])
+	for len(ret) < msglen {
 		var tempbuf []byte
 		conn.Read(tempbuf)
-		buf = append(buf, tempbuf...)
+		ret = append(ret, tempbuf...)
 	}
 	conn.SetReadDeadline(time.Time{})
-	return buf
+	return
 }
 
 func (pair *WebPair) ClosePipe() {
@@ -72,9 +72,13 @@ func (pair *WebPair) RemoteToServer() {
 
 func (pair *SSPair) RemoteToServer() {
 	for {
-		data := readTillDrain(pair.remote)
+		data, err := readTillDrain(pair.remote)
+		if err != nil {
+			pair.ClosePipe()
+			return
+		}
 		data = data[5:]
-		_, err := pair.ss.Write(data)
+		_, err = pair.ss.Write(data)
 		if err != nil {
 			pair.ClosePipe()
 			return
@@ -108,6 +112,14 @@ func dispatchConnection(conn net.Conn) {
 		go pair.RemoteToServer()
 		go pair.ServerToRemote()
 	}
+	goSS := func() {
+		pair, err := MakeSSPipe(conn)
+		if err != nil {
+			log.Fatal(err)
+		}
+		go pair.RemoteToServer()
+		go pair.ServerToRemote()
+	}
 	data := []byte{}
 	conn.Read(data)
 	client_hello, err := gqserver.ParseClientHello(data)
@@ -115,12 +127,23 @@ func dispatchConnection(conn net.Conn) {
 		goWeb(data)
 		return
 	}
-	is_SS := gqserver.IsSS(&client_hello)
+	is_SS := gqserver.IsSS(client_hello)
 	if !is_SS {
 		goWeb(data)
 		return
 	}
 
+	reply := gqserver.ComposeReply(client_hello)
+	_, err = conn.Write(reply)
+	if err != nil {
+		return
+	}
+
+	_, err = conn.Read(reply)
+	if err != nil {
+		return
+	}
+	goSS()
 }
 
 var SS_LOCAL_HOST string
@@ -152,6 +175,20 @@ func MakeSSPipe(remote net.Conn) (SSPair, error) {
 	return pair, nil
 }
 
+func usedRandomCleaner() {
+	var mutex = &sync.Mutex{}
+	for {
+		time.Sleep(30 * time.Minute)
+		now := int(time.Now().Unix())
+		mutex.Lock()
+		for key, t := range gqserver.UsedRandom {
+			if now-t > 1800 {
+				delete(gqserver.UsedRandom, key)
+			}
+		}
+		mutex.Unlock()
+	}
+}
 func main() {
 	SS_LOCAL_HOST = os.Getenv("SS_LOCAL_HOST")
 	// Should be 127.0.0.1 unless the plugin is deployed on another machine, which is not supported yet

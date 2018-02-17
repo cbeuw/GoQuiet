@@ -1,8 +1,10 @@
 package gqserver
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/rand"
 )
 
 type RecordLayer struct {
@@ -53,7 +55,7 @@ func parseExtensions(input []byte) (ret map[[2]byte][]byte, err error) {
 func peelRecordLayer(data []byte) (ret []byte, err error) {
 	return
 }
-func ParseClientHello(data []byte) (ret ClientHello, err error) {
+func ParseClientHello(data []byte) (ret *ClientHello, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = errors.New("Malformed ClientHello")
@@ -64,14 +66,14 @@ func ParseClientHello(data []byte) (ret ClientHello, err error) {
 	// Handshake Type
 	handshake_type := data[pointer]
 	if handshake_type != 0x01 {
-		return ClientHello{}, errors.New("Not a ClientHello")
+		return ret, errors.New("Not a ClientHello")
 	}
 	pointer += 1
 	// Length
 	length := BtoInt(data[pointer : pointer+3])
 	pointer += 3
 	if length != len(data[pointer:]) {
-		return ClientHello{}, errors.New("Hello length doesn't match")
+		return ret, errors.New("Hello length doesn't match")
 	}
 	// Client Version
 	client_version := data[pointer : pointer+2]
@@ -98,7 +100,7 @@ func ParseClientHello(data []byte) (ret ClientHello, err error) {
 	extensions_len := BtoInt(data[pointer : pointer+2])
 	pointer += 2
 	extensions, err := parseExtensions(data[pointer:])
-	ret = ClientHello{
+	ret = &ClientHello{
 		handshake_type,
 		length,
 		client_version,
@@ -112,8 +114,48 @@ func ParseClientHello(data []byte) (ret ClientHello, err error) {
 		extensions_len,
 		extensions,
 	}
-	return ret, err
+	return
 }
 
-func ComposeServerHello() {
+func addRecordLayer(input []byte, typ []byte) []byte {
+	length := make([]byte, 2)
+	binary.BigEndian.PutUint16(length, uint16(len(input)))
+	ret := append(typ, []byte{0x03, 0x03}...)
+	ret = append(ret, length...)
+	ret = append(ret, input...)
+	return ret
+}
+
+func composeServerHello(client_hello *ClientHello) []byte {
+	var server_hello [10][]byte
+	server_hello[0] = []byte{0x02}             // handshake type
+	server_hello[1] = []byte{0x00, 0x00, 0x4d} // length 77
+	server_hello[2] = []byte{0x03, 0x03}       // server version
+	random := make([]byte, 32)
+	binary.BigEndian.PutUint32(random, rand.Uint32())
+	server_hello[3] = random                               // random
+	server_hello[4] = []byte{0x20}                         // session id length 32
+	server_hello[5] = client_hello.session_id              // session id
+	server_hello[6] = []byte{0xc0, 0x30}                   // cipher suite TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	server_hello[7] = []byte{0x00}                         // compression method null
+	server_hello[8] = []byte{0x00, 0x05}                   // extensions length 5
+	server_hello[9] = []byte{0xff, 0x01, 0x00, 0x01, 0x00} // extensions renegotiation_info
+	ret := []byte{}
+	for i := 0; i < 10; i++ {
+		ret = append(ret, server_hello[i]...)
+	}
+	return ret
+}
+
+func ComposeReply(client_hello *ClientHello) []byte {
+	sh_bytes := addRecordLayer(composeServerHello(client_hello), []byte{0x16})
+	ccs_bytes := addRecordLayer([]byte{0x01}, []byte{0x14})
+	finished := make([]byte, 64)
+	r := rand.Uint64()
+	binary.BigEndian.PutUint64(finished, r)
+	finished = finished[0:40]
+	f_bytes := addRecordLayer(finished, []byte{0x16})
+	ret := append(sh_bytes, ccs_bytes...)
+	ret = append(ret, f_bytes...)
+	return ret
 }

@@ -6,6 +6,8 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 	"fmt"
+	"log"
+	"sync"
 	"time"
 )
 
@@ -23,16 +25,30 @@ func IsSS(input *ClientHello) bool {
 		return false
 	}
 
+	var random [32]byte
+	copy(random[:], input.random)
+
+	var mutex = &sync.Mutex{}
+
+	mutex.Lock()
+	used := UsedRandom[random]
+	mutex.Unlock()
+
+	if used != 0 {
+		log.Println("Replay! Duplicate random")
+		return false
+	}
+
+	mutex.Lock()
+	UsedRandom[random] = int(time.Now().Unix())
+	mutex.Unlock()
+
 	h := sha256.New()
 	t := int(time.Now().Unix()) / Config.ticket_time_hint
 	h.Write([]byte(fmt.Sprintf("%v", t) + Config.key))
 	goal := h.Sum(nil)
 
 	plaintext := decrypt(input.random[0:16], Config.aes_key, input.random[16:])
-	if !bytes.Equal(plaintext, goal[0:16]) {
-		return false
-	}
+	return bytes.Equal(plaintext, goal[0:16])
 
-	plaintext = decrypt(ticket[0:16], Config.aes_key, ticket[16:])
-	return bytes.Equal(plaintext[0:32], goal)
 }
