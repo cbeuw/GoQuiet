@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/imsupernewstar/GoQuiet/goquiet"
+	"github.com/imsupernewstar/GoQuiet/goquiet/gqserver"
 	"io"
 	"log"
 	"net"
@@ -33,7 +33,7 @@ func readTillDrain(conn net.Conn) []byte {
 	conn.SetReadDeadline(t) // 3 seconds
 	var buf []byte
 	conn.Read(buf)
-	msglen := goquiet.BtoInt(buf[3:5])
+	msglen := gqserver.BtoInt(buf[3:5])
 	for len(buf) < msglen {
 		var tempbuf []byte
 		conn.Read(tempbuf)
@@ -63,18 +63,6 @@ func (pair *WebPair) ServerToRemote() {
 func (pair *WebPair) RemoteToServer() {
 	for {
 		_, err := io.Copy(pair.webServer, pair.remote)
-		if err != nil {
-			pair.ClosePipe()
-			return
-		}
-	}
-}
-
-func (pair *SSPair) ServerToRemote() {
-	for {
-		data := readTillDrain(pair.ss)
-		data = data[5:]
-		_, err := pair.ss.Write(data)
 		if err != nil {
 			pair.ClosePipe()
 			return
@@ -122,12 +110,12 @@ func dispatchConnection(conn net.Conn) {
 	}
 	data := []byte{}
 	conn.Read(data)
-	client_hello, err := goquiet.ParseClientHello(data)
+	client_hello, err := gqserver.ParseClientHello(data)
 	if err != nil {
 		goWeb(data)
 		return
 	}
-	is_SS := goquiet.IsSS(client_hello)
+	is_SS := gqserver.IsSS(&client_hello)
 	if !is_SS {
 		goWeb(data)
 		return
@@ -139,30 +127,29 @@ var SS_LOCAL_HOST string
 var SS_LOCAL_PORT string
 var SS_REMOTE_HOST string
 var SS_REMOTE_PORT string
-var web_server_addr string
 
-func MakeWebPipe(remote net.Conn) (pair WebPair, err error) {
-	conn, err := net.Dial("tcp", web_server_addr)
+func MakeWebPipe(remote net.Conn) (WebPair, error) {
+	conn, err := net.Dial("tcp", gqserver.Config.Web_server_addr)
 	if err != nil {
 		return WebPair{}, errors.New("Connection to web server failed")
 	}
-	pair = WebPair{
+	pair := WebPair{
 		conn,
 		remote,
 	}
-	return pair, err
+	return pair, nil
 }
 
-func MakeSSPipe(remote net.Conn) (pair SSPair, err error) {
+func MakeSSPipe(remote net.Conn) (SSPair, error) {
 	conn, err := net.Dial("tcp", SS_LOCAL_HOST+":"+SS_LOCAL_PORT)
 	if err != nil {
 		return SSPair{}, errors.New("Connection to SS server failed")
 	}
-	pair = SSPair{
+	pair := SSPair{
 		conn,
 		remote,
 	}
-	return pair, err
+	return pair, nil
 }
 
 func main() {
@@ -174,7 +161,10 @@ func main() {
 	// Outbound listening address, should be 0.0.0.0
 	SS_REMOTE_PORT = os.Getenv("SS_REMOTE_PORT")
 	// Since this is a TLS obfuscator, this should be 443
-	web_server_addr = os.Args[1]
+	err := gqserver.ParseConfig(os.Args[1])
+	if err != nil {
+		panic(err)
+	}
 
 	listener, _ := net.Listen("tcp", SS_REMOTE_HOST+":"+SS_REMOTE_PORT)
 	for {
