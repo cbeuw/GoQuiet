@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/imsupernewstar/GoQuiet/goquiet/gqserver"
+	"github.com/imsupernewstar/GoQuiet/gqserver"
 	"io"
 	"log"
 	"net"
@@ -102,9 +102,9 @@ func (pair *SSPair) ServerToRemote() {
 	}
 }
 
-func dispatchConnection(conn net.Conn) {
+func dispatchConnection(conn net.Conn, sta *State) {
 	goWeb := func(data []byte) {
-		pair, err := MakeWebPipe(conn)
+		pair, err := MakeWebPipe(conn, sta)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -113,7 +113,7 @@ func dispatchConnection(conn net.Conn) {
 		go pair.ServerToRemote()
 	}
 	goSS := func() {
-		pair, err := MakeSSPipe(conn)
+		pair, err := MakeSSPipe(conn, sta)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -127,7 +127,7 @@ func dispatchConnection(conn net.Conn) {
 		goWeb(data)
 		return
 	}
-	is_SS := gqserver.IsSS(client_hello)
+	is_SS := gqserver.IsSS(client_hello, sta)
 	if !is_SS {
 		goWeb(data)
 		return
@@ -146,71 +146,71 @@ func dispatchConnection(conn net.Conn) {
 	goSS()
 }
 
-var SS_LOCAL_HOST string
-var SS_LOCAL_PORT string
-var SS_REMOTE_HOST string
-var SS_REMOTE_PORT string
-
-func MakeWebPipe(remote net.Conn) (WebPair, error) {
-	conn, err := net.Dial("tcp", gqserver.Config.Web_server_addr)
+func MakeWebPipe(remote net.Conn, sta *State) (*WebPair, error) {
+	conn, err := net.Dial("tcp", sta.Web_server_addr)
 	if err != nil {
-		return WebPair{}, errors.New("Connection to web server failed")
+		return &WebPair{}, errors.New("Connection to web server failed")
 	}
-	pair := WebPair{
+	pair := &WebPair{
 		conn,
 		remote,
 	}
 	return pair, nil
 }
 
-func MakeSSPipe(remote net.Conn) (SSPair, error) {
-	conn, err := net.Dial("tcp", SS_LOCAL_HOST+":"+SS_LOCAL_PORT)
+func MakeSSPipe(remote net.Conn, sta *State) (*SSPair, error) {
+	conn, err := net.Dial("tcp", sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT)
 	if err != nil {
-		return SSPair{}, errors.New("Connection to SS server failed")
+		return &SSPair{}, errors.New("Connection to SS server failed")
 	}
-	pair := SSPair{
+	pair := &SSPair{
 		conn,
 		remote,
 	}
 	return pair, nil
 }
 
-func usedRandomCleaner() {
+func usedRandomCleaner(sta *State) {
 	var mutex = &sync.Mutex{}
 	for {
 		time.Sleep(30 * time.Minute)
-		now := int(time.Now().Unix())
+		now := int(sta.Now().Unix())
 		mutex.Lock()
-		for key, t := range gqserver.UsedRandom {
+		for key, t := range sta.UsedRandom {
 			if now-t > 1800 {
-				delete(gqserver.UsedRandom, key)
+				delete(sta.UsedRandom, key)
 			}
 		}
 		mutex.Unlock()
 	}
 }
+
 func main() {
-	SS_LOCAL_HOST = os.Getenv("SS_LOCAL_HOST")
-	// Should be 127.0.0.1 unless the plugin is deployed on another machine, which is not supported yet
-	SS_LOCAL_PORT = os.Getenv("SS_LOCAL_PORT")
-	// SS loopback port, default set by SS to 8388
-	SS_REMOTE_HOST = os.Getenv("SS_REMOTE_HOST")
-	// Outbound listening address, should be 0.0.0.0
-	SS_REMOTE_PORT = os.Getenv("SS_REMOTE_PORT")
-	// Since this is a TLS obfuscator, this should be 443
-	err := gqserver.ParseConfig(os.Args[1])
+	sta := &State{
+		SS_LOCAL_HOST: os.Getenv("SS_LOCAL_HOST"),
+		// Should be 127.0.0.1 unless the plugin is deployed on another machine, which is not supported yet
+		SS_LOCAL_PORT: os.Getenv("SS_LOCAL_PORT"),
+		// SS loopback port, default set by SS to 8388
+		SS_REMOTE_HOST: os.Getenv("SS_REMOTE_HOST"),
+		// Outbound listening address, should be 0.0.0.0
+		SS_REMOTE_PORT: os.Getenv("SS_REMOTE_PORT"),
+		// Since this is a TLS obfuscator, this should be 443
+		Now:         time.Now,
+		Used_random: map[[32]byte]int{},
+	}
+	err = gqserver.ParseConfig(os.Args[1], sta)
 	if err != nil {
 		panic(err)
 	}
-
-	listener, _ := net.Listen("tcp", SS_REMOTE_HOST+":"+SS_REMOTE_PORT)
+	go usedRandomCleaner(sta)
+	listener, _ := net.Listen("tcp", sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			log.Printf("%v", err)
 			continue
 		}
-		go dispatchConnection(conn)
+		go dispatchConnection(conn, sta)
 	}
 
 }
