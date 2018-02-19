@@ -7,19 +7,20 @@ import (
 	"math/rand"
 )
 
+// Contains every field in a ClientHello message
 type ClientHello struct {
-	handshake_type          byte
-	length                  int
-	client_version          []byte
-	random                  []byte
-	session_id_len          int
-	session_id              []byte
-	cipher_suites_len       int
-	cipher_suites           []byte
-	compression_methods_len int
-	compression_methods     []byte
-	extensions_len          int
-	extensions              map[[2]byte][]byte
+	handshakeType         byte
+	length                int
+	clientVersion         []byte
+	random                []byte
+	sessionIdLen          int
+	sessionId             []byte
+	cipherSuitesLen       int
+	cipherSuites          []byte
+	compressionMethodsLen int
+	compressionMethods    []byte
+	extensionsLen         int
+	extensions            map[[2]byte][]byte
 }
 
 func parseExtensions(input []byte) (ret map[[2]byte][]byte, err error) {
@@ -49,6 +50,9 @@ func peelRecordLayer(data []byte) (ret []byte, err error) {
 	ret = data[5:]
 	return
 }
+
+// ParseClientHello parses everything on top of the TLS layer
+// (including the record layer) into ClientHello type
 func ParseClientHello(data []byte) (ret *ClientHello, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -58,8 +62,8 @@ func ParseClientHello(data []byte) (ret *ClientHello, err error) {
 	data, err = peelRecordLayer(data)
 	pointer := 0
 	// Handshake Type
-	handshake_type := data[pointer]
-	if handshake_type != 0x01 {
+	handshakeType := data[pointer]
+	if handshakeType != 0x01 {
 		return ret, errors.New("Not a ClientHello")
 	}
 	pointer += 1
@@ -70,42 +74,42 @@ func ParseClientHello(data []byte) (ret *ClientHello, err error) {
 		return ret, errors.New("Hello length doesn't match")
 	}
 	// Client Version
-	client_version := data[pointer : pointer+2]
+	clientVersion := data[pointer : pointer+2]
 	pointer += 2
 	// Random
 	random := data[pointer : pointer+32]
 	pointer += 32
 	// Session ID
-	session_id_len := int(data[pointer])
+	sessionIdLen := int(data[pointer])
 	pointer += 1
-	session_id := data[pointer : pointer+session_id_len]
-	pointer += session_id_len
+	sessionId := data[pointer : pointer+sessionIdLen]
+	pointer += sessionIdLen
 	// Cipher Suites
-	cipher_suites_len := BtoInt(data[pointer : pointer+2])
+	cipherSuitesLen := BtoInt(data[pointer : pointer+2])
 	pointer += 2
-	cipher_suites := data[pointer : pointer+cipher_suites_len]
-	pointer += cipher_suites_len
+	cipherSuites := data[pointer : pointer+cipherSuitesLen]
+	pointer += cipherSuitesLen
 	// Compression Methods
-	compression_methods_len := int(data[pointer])
+	compressionMethodsLen := int(data[pointer])
 	pointer += 1
-	compression_methods := data[pointer : pointer+compression_methods_len]
-	pointer += compression_methods_len
+	compressionMethods := data[pointer : pointer+compressionMethodsLen]
+	pointer += compressionMethodsLen
 	// Extensions
-	extensions_len := BtoInt(data[pointer : pointer+2])
+	extensionsLen := BtoInt(data[pointer : pointer+2])
 	pointer += 2
 	extensions, err := parseExtensions(data[pointer:])
 	ret = &ClientHello{
-		handshake_type,
+		handshakeType,
 		length,
-		client_version,
+		clientVersion,
 		random,
-		session_id_len,
-		session_id,
-		cipher_suites_len,
-		cipher_suites,
-		compression_methods_len,
-		compression_methods,
-		extensions_len,
+		sessionIdLen,
+		sessionId,
+		cipherSuitesLen,
+		cipherSuites,
+		compressionMethodsLen,
+		compressionMethods,
+		extensionsLen,
 		extensions,
 	}
 	return
@@ -121,22 +125,22 @@ func addRecordLayer(input []byte, typ []byte) []byte {
 }
 
 func composeServerHello(client_hello *ClientHello) []byte {
-	var server_hello [10][]byte
-	server_hello[0] = []byte{0x02}             // handshake type
-	server_hello[1] = []byte{0x00, 0x00, 0x4d} // length 77
-	server_hello[2] = []byte{0x03, 0x03}       // server version
+	var serverHello [10][]byte
+	serverHello[0] = []byte{0x02}             // handshake type
+	serverHello[1] = []byte{0x00, 0x00, 0x4d} // length 77
+	serverHello[2] = []byte{0x03, 0x03}       // server version
 	random := make([]byte, 32)
 	binary.BigEndian.PutUint32(random, rand.Uint32())
-	server_hello[3] = random                               // random
-	server_hello[4] = []byte{0x20}                         // session id length 32
-	server_hello[5] = client_hello.session_id              // session id
-	server_hello[6] = []byte{0xc0, 0x30}                   // cipher suite TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	server_hello[7] = []byte{0x00}                         // compression method null
-	server_hello[8] = []byte{0x00, 0x05}                   // extensions length 5
-	server_hello[9] = []byte{0xff, 0x01, 0x00, 0x01, 0x00} // extensions renegotiation_info
+	serverHello[3] = random                               // random
+	serverHello[4] = []byte{0x20}                         // session id length 32
+	serverHello[5] = client_hello.sessionId               // session id
+	serverHello[6] = []byte{0xc0, 0x30}                   // cipher suite TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	serverHello[7] = []byte{0x00}                         // compression method null
+	serverHello[8] = []byte{0x00, 0x05}                   // extensions length 5
+	serverHello[9] = []byte{0xff, 0x01, 0x00, 0x01, 0x00} // extensions renegotiation_info
 	ret := []byte{}
 	for i := 0; i < 10; i++ {
-		ret = append(ret, server_hello[i]...)
+		ret = append(ret, serverHello[i]...)
 	}
 	return ret
 }

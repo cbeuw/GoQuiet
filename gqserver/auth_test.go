@@ -24,10 +24,10 @@ func TestIsSS(t *testing.T) {
 			return time.Unix(int64(mockTime), 0)
 		}
 		mockSta := &State{
-			Key:              indicat[1],
-			Ticket_time_hint: timeHint,
-			Now:              mockTimeFn,
-			Used_random:      map[[32]byte]int{},
+			Key:            indicat[1],
+			TicketTimeHint: timeHint,
+			Now:            mockTimeFn,
+			UsedRandom:     map[[32]byte]int{},
 		}
 		MakeAESKey(mockSta)
 		ch, err := ParseClientHello(content)

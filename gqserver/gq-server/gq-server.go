@@ -12,18 +12,18 @@ import (
 	"time"
 )
 
-type Pipe interface {
-	RemoteToServer()
-	ServerToRemote()
-	ClosePipe()
+type pipe interface {
+	remoteToServer()
+	serverToRemote()
+	closePipe()
 }
 
-type SSPair struct {
+type ssPair struct {
 	ss     net.Conn
 	remote net.Conn
 }
 
-type WebPair struct {
+type webPair struct {
 	webServer net.Conn
 	remote    net.Conn
 }
@@ -43,50 +43,50 @@ func readTillDrain(conn net.Conn) (ret []byte, err error) {
 	return
 }
 
-func (pair *WebPair) ClosePipe() {
+func (pair *webPair) closePipe() {
 	pair.webServer.Close()
 	pair.remote.Close()
 }
 
-func (pair *SSPair) ClosePipe() {
+func (pair *ssPair) closePipe() {
 	pair.ss.Close()
 	pair.remote.Close()
 }
 
-func (pair *WebPair) ServerToRemote() {
+func (pair *webPair) serverToRemote() {
 	_, err := io.Copy(pair.remote, pair.webServer)
 	if err != nil {
-		pair.ClosePipe()
+		pair.closePipe()
 	}
 }
 
-func (pair *WebPair) RemoteToServer() {
+func (pair *webPair) remoteToServer() {
 	for {
 		_, err := io.Copy(pair.webServer, pair.remote)
 		if err != nil {
-			pair.ClosePipe()
+			pair.closePipe()
 			return
 		}
 	}
 }
 
-func (pair *SSPair) RemoteToServer() {
+func (pair *ssPair) remoteToServer() {
 	for {
 		data, err := readTillDrain(pair.remote)
 		if err != nil {
-			pair.ClosePipe()
+			pair.closePipe()
 			return
 		}
 		data = data[5:]
 		_, err = pair.ss.Write(data)
 		if err != nil {
-			pair.ClosePipe()
+			pair.closePipe()
 			return
 		}
 	}
 }
 
-func (pair *SSPair) ServerToRemote() {
+func (pair *ssPair) serverToRemote() {
 	for {
 		data := []byte{}
 		pair.ss.Read(data)
@@ -96,7 +96,7 @@ func (pair *SSPair) ServerToRemote() {
 		data = append(record, data...)
 		_, err := pair.remote.Write(data)
 		if err != nil {
-			pair.ClosePipe()
+			pair.closePipe()
 			return
 		}
 	}
@@ -104,21 +104,21 @@ func (pair *SSPair) ServerToRemote() {
 
 func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	goWeb := func(data []byte) {
-		pair, err := MakeWebPipe(conn, sta)
+		pair, err := makeWebPipe(conn, sta)
 		if err != nil {
 			log.Fatal(err)
 		}
 		pair.webServer.Write(data)
-		go pair.RemoteToServer()
-		go pair.ServerToRemote()
+		go pair.remoteToServer()
+		go pair.serverToRemote()
 	}
 	goSS := func() {
-		pair, err := MakeSSPipe(conn, sta)
+		pair, err := makeSSPipe(conn, sta)
 		if err != nil {
 			log.Fatal(err)
 		}
-		go pair.RemoteToServer()
-		go pair.ServerToRemote()
+		go pair.remoteToServer()
+		go pair.serverToRemote()
 	}
 	data := []byte{}
 	conn.Read(data)
@@ -146,24 +146,24 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	goSS()
 }
 
-func MakeWebPipe(remote net.Conn, sta *gqserver.State) (*WebPair, error) {
-	conn, err := net.Dial("tcp", sta.Web_server_addr)
+func makeWebPipe(remote net.Conn, sta *gqserver.State) (*webPair, error) {
+	conn, err := net.Dial("tcp", sta.WebServerAddr)
 	if err != nil {
-		return &WebPair{}, errors.New("Connection to web server failed")
+		return &webPair{}, errors.New("Connection to web server failed")
 	}
-	pair := &WebPair{
+	pair := &webPair{
 		conn,
 		remote,
 	}
 	return pair, nil
 }
 
-func MakeSSPipe(remote net.Conn, sta *gqserver.State) (*SSPair, error) {
+func makeSSPipe(remote net.Conn, sta *gqserver.State) (*ssPair, error) {
 	conn, err := net.Dial("tcp", sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT)
 	if err != nil {
-		return &SSPair{}, errors.New("Connection to SS server failed")
+		return &ssPair{}, errors.New("Connection to SS server failed")
 	}
-	pair := &SSPair{
+	pair := &ssPair{
 		conn,
 		remote,
 	}
@@ -176,9 +176,9 @@ func usedRandomCleaner(sta *gqserver.State) {
 		time.Sleep(30 * time.Minute)
 		now := int(sta.Now().Unix())
 		mutex.Lock()
-		for key, t := range sta.Used_random {
+		for key, t := range sta.UsedRandom {
 			if now-t > 1800 {
-				delete(sta.Used_random, key)
+				delete(sta.UsedRandom, key)
 			}
 		}
 		mutex.Unlock()
@@ -195,8 +195,8 @@ func main() {
 		// Outbound listening address, should be 0.0.0.0
 		SS_REMOTE_PORT: os.Getenv("SS_REMOTE_PORT"),
 		// Since this is a TLS obfuscator, this should be 443
-		Now:         time.Now,
-		Used_random: map[[32]byte]int{},
+		Now:        time.Now,
+		UsedRandom: map[[32]byte]int{},
 	}
 	err := gqserver.ParseConfig(os.Args[1], sta)
 	if err != nil {

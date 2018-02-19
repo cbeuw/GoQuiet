@@ -62,10 +62,10 @@ func TestComposeReply(t *testing.T) {
 		content, _ := ioutil.ReadFile(dir + c.Name())
 		ch, _ := ParseClientHello(content)
 		result := ComposeReply(ch)
-		if !bytes.Equal(result[44:76], ch.session_id) {
+		if !bytes.Equal(result[44:76], ch.sessionId) {
 			t.Error(
 				"For", c.Name(),
-				"expected", fmt.Sprintf("%x", ch.session_id),
+				"expected", fmt.Sprintf("%x", ch.sessionId),
 				"got", fmt.Sprintf("%x", result[44:76]),
 			)
 		}

@@ -1,9 +1,10 @@
 package gqserver
 
-// Because Uint methods from binary package are stupid
+// BtoInt converts a byte slice into int in Big Endian order
+// Uint methods from binary package can be used, but they are messy
 func BtoInt(b []byte) int {
 	var mult uint = 1
-	var sum uint = 0
+	var sum uint
 	length := uint(len(b))
 	var i uint
 	for i = 0; i < length; i++ {
