@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/imsupernewstar/GoQuiet/gqserver"
+	"github.com/cbeuw/GoQuiet/gqserver"
 	"io"
 	"log"
 	"net"
