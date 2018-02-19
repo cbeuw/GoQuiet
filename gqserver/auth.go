@@ -49,7 +49,6 @@ func IsSS(input *ClientHello, sta *State) bool {
 	h.Write([]byte(fmt.Sprintf("%v", t) + sta.Key))
 	goal := h.Sum(nil)[0:16]
 	plaintext := decrypt(input.random[0:16], sta.AES_key, input.random[16:])
-	fmt.Printf("goal: %x\nplaintext: %x\n", goal, plaintext)
 	return bytes.Equal(plaintext, goal)
 
 }
