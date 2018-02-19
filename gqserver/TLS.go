@@ -7,7 +7,7 @@ import (
 	"math/rand"
 )
 
-// Contains every field in a ClientHello message
+// ClientHello contains every field in a ClientHello message
 type ClientHello struct {
 	handshakeType         byte
 	length                int
@@ -31,9 +31,9 @@ func parseExtensions(input []byte) (ret map[[2]byte][]byte, err error) {
 		}
 	}()
 	pointer := 0
-	total_len := len(input)
+	totalLen := len(input)
 	ret = make(map[[2]byte][]byte)
-	for pointer < total_len {
+	for pointer < totalLen {
 		var typ [2]byte
 		copy(typ[:], input[pointer:pointer+2])
 		pointer += 2
@@ -124,7 +124,7 @@ func addRecordLayer(input []byte, typ []byte) []byte {
 	return ret
 }
 
-func composeServerHello(client_hello *ClientHello) []byte {
+func composeServerHello(ch *ClientHello) []byte {
 	var serverHello [10][]byte
 	serverHello[0] = []byte{0x02}             // handshake type
 	serverHello[1] = []byte{0x00, 0x00, 0x4d} // length 77
@@ -133,7 +133,7 @@ func composeServerHello(client_hello *ClientHello) []byte {
 	binary.BigEndian.PutUint32(random, rand.Uint32())
 	serverHello[3] = random                               // random
 	serverHello[4] = []byte{0x20}                         // session id length 32
-	serverHello[5] = client_hello.sessionId               // session id
+	serverHello[5] = ch.sessionId                         // session id
 	serverHello[6] = []byte{0xc0, 0x30}                   // cipher suite TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	serverHello[7] = []byte{0x00}                         // compression method null
 	serverHello[8] = []byte{0x00, 0x05}                   // extensions length 5
@@ -145,15 +145,18 @@ func composeServerHello(client_hello *ClientHello) []byte {
 	return ret
 }
 
-func ComposeReply(client_hello *ClientHello) []byte {
-	sh_bytes := addRecordLayer(composeServerHello(client_hello), []byte{0x16})
-	ccs_bytes := addRecordLayer([]byte{0x01}, []byte{0x14})
+// ComposeReply composes the ServerHello, ChangeCipherSpec and Finished messages
+// together with their respective record layers into one byte slice. The content
+// of these messages are random and useless for this plugin
+func ComposeReply(ch *ClientHello) []byte {
+	shBytes := addRecordLayer(composeServerHello(ch), []byte{0x16})
+	ccsBytes := addRecordLayer([]byte{0x01}, []byte{0x14})
 	finished := make([]byte, 64)
 	r := rand.Uint64()
 	binary.BigEndian.PutUint64(finished, r)
 	finished = finished[0:40]
-	f_bytes := addRecordLayer(finished, []byte{0x16})
-	ret := append(sh_bytes, ccs_bytes...)
-	ret = append(ret, f_bytes...)
+	fBytes := addRecordLayer(finished, []byte{0x16})
+	ret := append(shBytes, ccsBytes...)
+	ret = append(ret, fBytes...)
 	return ret
 }

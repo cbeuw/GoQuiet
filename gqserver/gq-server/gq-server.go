@@ -122,18 +122,18 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	}
 	data := []byte{}
 	conn.Read(data)
-	client_hello, err := gqserver.ParseClientHello(data)
+	ch, err := gqserver.ParseClientHello(data)
 	if err != nil {
 		goWeb(data)
 		return
 	}
-	is_SS := gqserver.IsSS(client_hello, sta)
-	if !is_SS {
+	isSS := gqserver.IsSS(ch, sta)
+	if !isSS {
 		goWeb(data)
 		return
 	}
 
-	reply := gqserver.ComposeReply(client_hello)
+	reply := gqserver.ComposeReply(ch)
 	_, err = conn.Write(reply)
 	if err != nil {
 		return

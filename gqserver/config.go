@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-// Provides either the real current time or a fake time
+// TimeFn provides either the real current time or a fake time
 type TimeFn func() time.Time
 
-// Global states
+// State type stores the global state of the program
 type State struct {
 	WebServerAddr  string
 	Key            string
