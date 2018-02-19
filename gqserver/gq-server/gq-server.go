@@ -102,7 +102,7 @@ func (pair *SSPair) ServerToRemote() {
 	}
 }
 
-func dispatchConnection(conn net.Conn, sta *State) {
+func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	goWeb := func(data []byte) {
 		pair, err := MakeWebPipe(conn, sta)
 		if err != nil {
@@ -146,7 +146,7 @@ func dispatchConnection(conn net.Conn, sta *State) {
 	goSS()
 }
 
-func MakeWebPipe(remote net.Conn, sta *State) (*WebPair, error) {
+func MakeWebPipe(remote net.Conn, sta *gqserver.State) (*WebPair, error) {
 	conn, err := net.Dial("tcp", sta.Web_server_addr)
 	if err != nil {
 		return &WebPair{}, errors.New("Connection to web server failed")
@@ -158,7 +158,7 @@ func MakeWebPipe(remote net.Conn, sta *State) (*WebPair, error) {
 	return pair, nil
 }
 
-func MakeSSPipe(remote net.Conn, sta *State) (*SSPair, error) {
+func MakeSSPipe(remote net.Conn, sta *gqserver.State) (*SSPair, error) {
 	conn, err := net.Dial("tcp", sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT)
 	if err != nil {
 		return &SSPair{}, errors.New("Connection to SS server failed")
@@ -170,15 +170,15 @@ func MakeSSPipe(remote net.Conn, sta *State) (*SSPair, error) {
 	return pair, nil
 }
 
-func usedRandomCleaner(sta *State) {
+func usedRandomCleaner(sta *gqserver.State) {
 	var mutex = &sync.Mutex{}
 	for {
 		time.Sleep(30 * time.Minute)
 		now := int(sta.Now().Unix())
 		mutex.Lock()
-		for key, t := range sta.UsedRandom {
+		for key, t := range sta.Used_random {
 			if now-t > 1800 {
-				delete(sta.UsedRandom, key)
+				delete(sta.Used_random, key)
 			}
 		}
 		mutex.Unlock()
@@ -186,7 +186,7 @@ func usedRandomCleaner(sta *State) {
 }
 
 func main() {
-	sta := &State{
+	sta := &gqserver.State{
 		SS_LOCAL_HOST: os.Getenv("SS_LOCAL_HOST"),
 		// Should be 127.0.0.1 unless the plugin is deployed on another machine, which is not supported yet
 		SS_LOCAL_PORT: os.Getenv("SS_LOCAL_PORT"),
@@ -198,10 +198,11 @@ func main() {
 		Now:         time.Now,
 		Used_random: map[[32]byte]int{},
 	}
-	err = gqserver.ParseConfig(os.Args[1], sta)
+	err := gqserver.ParseConfig(os.Args[1], sta)
 	if err != nil {
 		panic(err)
 	}
+	gqserver.MakeAESKey(sta)
 	go usedRandomCleaner(sta)
 	listener, _ := net.Listen("tcp", sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT)
 	for {
