@@ -1,3 +1,4 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/cbeuw/GoQuiet)](https://goreportcard.com/report/github.com/cbeuw/GoQuiet)
 # [WIP]GoQuiet
 A shadowsocks plugin that simulates TLS handshake and masquerades as a normal webserver.
 
