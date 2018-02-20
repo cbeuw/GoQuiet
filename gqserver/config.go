@@ -3,7 +3,6 @@ package gqserver
 import (
 	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"time"
 )
@@ -29,11 +28,11 @@ type State struct {
 func ParseConfig(configPath string, sta *State) error {
 	content, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		return errors.New("Failed to read config file. File may not exist")
+		return err
 	}
 	err = json.Unmarshal(content, &sta)
 	if err != nil {
-		return errors.New("Bad config json format")
+		return err
 	}
 	return nil
 }

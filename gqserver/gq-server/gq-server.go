@@ -197,19 +197,20 @@ func usedRandomCleaner(sta *gqserver.State) {
 func main() {
 	sta := &gqserver.State{
 		SS_LOCAL_HOST: os.Getenv("SS_LOCAL_HOST"),
-		// Should be 127.0.0.1 unless the plugin is deployed on another machine, which is not supported yet
+		// Should be 127.0.0.1 unless the plugin and shadowsocks server are on seperate machines, which is not supported yet
 		SS_LOCAL_PORT: os.Getenv("SS_LOCAL_PORT"),
 		// SS loopback port, default set by SS to 8388
 		SS_REMOTE_HOST: os.Getenv("SS_REMOTE_HOST"),
 		// Outbound listening address, should be 0.0.0.0
 		SS_REMOTE_PORT: os.Getenv("SS_REMOTE_PORT"),
-		// Since this is a TLS obfuscator, this should be 443
+		// Port exposed to the internet. Since this is a TLS obfuscator, this should be 443
 		Now:        time.Now,
 		UsedRandom: map[[32]byte]int{},
 	}
-	err := gqserver.ParseConfig(os.Args[1], sta)
+	configPath := os.Getenv("SS_PLUGIN_OPTIONS")
+	err := gqserver.ParseConfig(configPath, sta)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Configuration file error: %v", err)
 	}
 	sta.AESKey = gqserver.MakeAESKey(sta.Key)
 	go usedRandomCleaner(sta)
