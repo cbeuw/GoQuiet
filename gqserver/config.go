@@ -35,13 +35,12 @@ func ParseConfig(configPath string, sta *State) error {
 	if err != nil {
 		return errors.New("Bad config json format")
 	}
-	MakeAESKey(sta)
 	return nil
 }
 
-// MakeAESKey calculates the SHA256 of the string key and writes it to the AESKey field
-func MakeAESKey(sta *State) {
+// MakeAESKey calculates the SHA256 of the string key
+func MakeAESKey(key string) []byte {
 	h := sha256.New()
-	h.Write([]byte(sta.Key))
-	sta.AESKey = h.Sum(nil)
+	h.Write([]byte(key))
+	return h.Sum(nil)
 }

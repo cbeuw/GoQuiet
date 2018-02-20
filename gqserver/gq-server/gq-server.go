@@ -29,14 +29,16 @@ type webPair struct {
 }
 
 func readTillDrain(conn net.Conn) (ret []byte, err error) {
-	t := time.Now()
-	t = t.Add(3 * time.Second)
-	conn.SetReadDeadline(t) // 3 seconds
 	_, err = conn.Read(ret)
+	// Give 3 seconds to receive everything after initial data
+	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	msglen := gqserver.BtoInt(ret[3:5])
 	for len(ret) < msglen {
 		var tempbuf []byte
-		conn.Read(tempbuf)
+		_, err = conn.Read(tempbuf)
+		if err != nil {
+			return
+		}
 		ret = append(ret, tempbuf...)
 	}
 	conn.SetReadDeadline(time.Time{})
@@ -121,7 +123,14 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		go pair.serverToRemote()
 	}
 	data := []byte{}
-	conn.Read(data)
+	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	_, err := conn.Read(data)
+	if err != nil {
+		log.Println(err)
+		conn.Close()
+		return
+	}
+	conn.SetReadDeadline(time.Time{})
 	ch, err := gqserver.ParseClientHello(data)
 	if err != nil {
 		goWeb(data)
@@ -200,11 +209,14 @@ func main() {
 	}
 	err := gqserver.ParseConfig(os.Args[1], sta)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	gqserver.MakeAESKey(sta)
+	sta.AESKey = gqserver.MakeAESKey(sta.Key)
 	go usedRandomCleaner(sta)
-	listener, _ := net.Listen("tcp", sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT)
+	listener, err := net.Listen("tcp", sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
