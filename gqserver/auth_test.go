@@ -29,7 +29,7 @@ func TestIsSS(t *testing.T) {
 			Now:            mockTimeFn,
 			UsedRandom:     map[[32]byte]int{},
 		}
-		mockSta.AESKey = MakeAESKey(mockSta.Key)
+		mockSta.SetAESKey()
 		ch, err := ParseClientHello(content)
 		if err != nil {
 			fmt.Println(err)

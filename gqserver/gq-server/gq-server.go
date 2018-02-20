@@ -138,6 +138,7 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	}
 	isSS := gqserver.IsSS(ch, sta)
 	if !isSS {
+		log.Printf("+1 non SS traffic from %v\n", conn.RemoteAddr())
 		goWeb(data)
 		return
 	}
@@ -187,7 +188,7 @@ func usedRandomCleaner(sta *gqserver.State) {
 		mutex.Lock()
 		for key, t := range sta.UsedRandom {
 			if now-t > 1800 {
-				delete(sta.UsedRandom, key)
+				sta.DelUsedRandom(key)
 			}
 		}
 		mutex.Unlock()
@@ -208,13 +209,14 @@ func main() {
 		UsedRandom: map[[32]byte]int{},
 	}
 	configPath := os.Getenv("SS_PLUGIN_OPTIONS")
-	err := gqserver.ParseConfig(configPath, sta)
+	err := sta.ParseConfig(configPath)
 	if err != nil {
 		log.Fatalf("Configuration file error: %v", err)
 	}
-	sta.AESKey = gqserver.MakeAESKey(sta.Key)
+	sta.SetAESKey()
 	go usedRandomCleaner(sta)
 	listener, err := net.Listen("tcp", sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT)
+	log.Println("Listening on " + sta.SS_REMOTE_HOST + ":" + sta.SS_REMOTE_PORT)
 	if err != nil {
 		log.Fatal(err)
 	}

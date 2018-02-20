@@ -42,7 +42,7 @@ func IsSS(input *ClientHello, sta *State) bool {
 	}
 
 	mutex.Lock()
-	sta.UsedRandom[random] = int(sta.Now().Unix())
+	sta.PutUsedRandom(random)
 	mutex.Unlock()
 
 	h := sha256.New()
