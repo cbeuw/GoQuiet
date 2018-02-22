@@ -31,7 +31,7 @@ rest = aes_encrypt(iv,aes_key,goal[0:16])
 random = iv + rest
 
 # Session ticket
-ticket = randbytes(192,seed=opaque+byte(preshared_key).to_int('big')+floor(gettimestamp()/ticket_time_hint)))
+ticket = randbytes(192,seed=opaque+aes_key+floor(gettimestamp()/ticket_time_hint)))
 ```
 
 Once the server receives the `ClientHello` message, it checks the `random` field. If it doesn't pass, the entire `ClientHello` is sent to the web server address set in the config file and the server then acts as a relay between the client and the web server. If it passes, the server then composes and sends `ServerHello`, `ChangeCipherSpec`, `Finished` together, and then client sends `ChangeCipherSpec`, `Finished` together. There are no useful informations in these messages. Then the server acts as a relay between the client and the shadowsocks server.
