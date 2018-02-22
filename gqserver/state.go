@@ -21,7 +21,6 @@ type StateManager interface {
 type State struct {
 	WebServerAddr  string
 	Key            string
-	TicketTimeHint int
 	AESKey         []byte
 	Now            TimeFn
 	SS_LOCAL_HOST  string

@@ -13,6 +13,5 @@ func TestParseConfig(t *testing.T) {
 		t.Error(err)
 		fmt.Println("Key: " + sta.Key)
 		fmt.Println("WebServerAddr: " + sta.WebServerAddr)
-		fmt.Printf("TicketTimeHint: %v\n", sta.TicketTimeHint)
 	}
 }

@@ -22,11 +22,6 @@ func decrypt(iv []byte, key []byte, ciphertext []byte) []byte {
 
 // IsSS checks if a ClientHello belongs to shadowsocks
 func IsSS(input *ClientHello, sta *State) bool {
-	ticket := input.extensions[[2]byte{0x00, 0x23}]
-	if len(ticket) != 192 {
-		return false
-	}
-
 	var random [32]byte
 	copy(random[:], input.random)
 
@@ -46,7 +41,7 @@ func IsSS(input *ClientHello, sta *State) bool {
 	mutex.Unlock()
 
 	h := sha256.New()
-	t := int(sta.Now().Unix()) / sta.TicketTimeHint
+	t := int(sta.Now().Unix()) / 12 * 60 * 60
 	h.Write([]byte(fmt.Sprintf("%v", t) + sta.Key))
 	goal := h.Sum(nil)[0:16]
 	plaintext := decrypt(input.random[0:16], sta.AESKey, input.random[16:])

@@ -18,16 +18,14 @@ func TestIsSS(t *testing.T) {
 		}
 		content, _ := ioutil.ReadFile(dir + c.Name())
 		indicat := strings.Split(c.Name(), "_")
-		timeHint, _ := strconv.Atoi(indicat[2])
-		mockTime, _ := strconv.Atoi(indicat[3])
+		mockTime, _ := strconv.Atoi(indicat[2])
 		mockTimeFn := func() time.Time {
 			return time.Unix(int64(mockTime), 0)
 		}
 		mockSta := &State{
-			Key:            indicat[1],
-			TicketTimeHint: timeHint,
-			Now:            mockTimeFn,
-			UsedRandom:     map[[32]byte]int{},
+			Key:        indicat[1],
+			Now:        mockTimeFn,
+			UsedRandom: map[[32]byte]int{},
 		}
 		mockSta.SetAESKey()
 		ch, err := ParseClientHello(content)
@@ -41,6 +39,13 @@ func TestIsSS(t *testing.T) {
 				"expecting", "true",
 				"got", isss,
 			)
+		} else if indicat[0] == "FALSE" && isss {
+			t.Error(
+				"For", c.Name(),
+				"expecting", "false",
+				"got", isss,
+			)
 		}
+
 	}
 }
