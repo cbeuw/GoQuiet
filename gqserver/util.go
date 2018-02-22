@@ -1,5 +1,7 @@
 package gqserver
 
+import prand "math/rand"
+
 // BtoInt converts a byte slice into int in Big Endian order
 // Uint methods from binary package can be used, but they are messy
 func BtoInt(b []byte) int {
@@ -11,4 +13,12 @@ func BtoInt(b []byte) int {
 		sum += uint(b[i]) * (mult << ((length - i - 1) * 8))
 	}
 	return int(sum)
+}
+func PsudoRandBytes(length int, seed int64) (ret []byte) {
+	prand.Seed(seed)
+	for len(ret) < length {
+		randByte := byte(prand.Intn(256))
+		ret = append(ret, randByte)
+	}
+	return
 }

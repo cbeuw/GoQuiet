@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"math/rand"
 	"net"
 	"time"
 )
@@ -148,19 +147,16 @@ func ParseClientHello(data []byte) (ret *ClientHello, err error) {
 
 func composeServerHello(ch *ClientHello) []byte {
 	var serverHello [10][]byte
-	serverHello[0] = []byte{0x02}             // handshake type
-	serverHello[1] = []byte{0x00, 0x00, 0x4d} // length 77
-	serverHello[2] = []byte{0x03, 0x03}       // server version
-	rand.Seed(time.Now().UnixNano())
-	random := make([]byte, 32)
-	binary.BigEndian.PutUint32(random, rand.Uint32())
-	serverHello[3] = random                               // random
-	serverHello[4] = []byte{0x20}                         // session id length 32
-	serverHello[5] = ch.sessionId                         // session id
-	serverHello[6] = []byte{0xc0, 0x30}                   // cipher suite TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	serverHello[7] = []byte{0x00}                         // compression method null
-	serverHello[8] = []byte{0x00, 0x05}                   // extensions length 5
-	serverHello[9] = []byte{0xff, 0x01, 0x00, 0x01, 0x00} // extensions renegotiation_info
+	serverHello[0] = []byte{0x02}                              // handshake type
+	serverHello[1] = []byte{0x00, 0x00, 0x4d}                  // length 77
+	serverHello[2] = []byte{0x03, 0x03}                        // server version
+	serverHello[3] = PsudoRandBytes(32, time.Now().UnixNano()) // random
+	serverHello[4] = []byte{0x20}                              // session id length 32
+	serverHello[5] = ch.sessionId                              // session id
+	serverHello[6] = []byte{0xc0, 0x30}                        // cipher suite TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	serverHello[7] = []byte{0x00}                              // compression method null
+	serverHello[8] = []byte{0x00, 0x05}                        // extensions length 5
+	serverHello[9] = []byte{0xff, 0x01, 0x00, 0x01, 0x00}      // extensions renegotiation_info
 	ret := []byte{}
 	for i := 0; i < 10; i++ {
 		ret = append(ret, serverHello[i]...)
@@ -176,9 +172,7 @@ func ComposeReply(ch *ClientHello) []byte {
 	shBytes := AddRecordLayer(composeServerHello(ch), []byte{0x16}, TLS12)
 	ccsBytes := AddRecordLayer([]byte{0x01}, []byte{0x14}, TLS12)
 	finished := make([]byte, 64)
-	r := rand.Uint64()
-	binary.BigEndian.PutUint64(finished, r)
-	finished = finished[0:40]
+	finished = PsudoRandBytes(40, time.Now().UnixNano())
 	fBytes := AddRecordLayer(finished, []byte{0x16}, TLS12)
 	ret := append(shBytes, ccsBytes...)
 	ret = append(ret, fBytes...)
