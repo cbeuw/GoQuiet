@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/binary"
 	"errors"
 	"github.com/cbeuw/GoQuiet/gqserver"
 	"io"
@@ -26,23 +25,6 @@ type ssPair struct {
 type webPair struct {
 	webServer net.Conn
 	remote    net.Conn
-}
-
-func readTillDrain(conn net.Conn) (ret []byte, err error) {
-	_, err = conn.Read(ret)
-	// Give 3 seconds to receive everything after initial data
-	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
-	msglen := gqserver.BtoInt(ret[3:5])
-	for len(ret) < msglen {
-		var tempbuf []byte
-		_, err = conn.Read(tempbuf)
-		if err != nil {
-			return
-		}
-		ret = append(ret, tempbuf...)
-	}
-	conn.SetReadDeadline(time.Time{})
-	return
 }
 
 func (pair *webPair) closePipe() {
@@ -74,12 +56,12 @@ func (pair *webPair) remoteToServer() {
 
 func (pair *ssPair) remoteToServer() {
 	for {
-		data, err := readTillDrain(pair.remote)
+		data, err := gqserver.ReadTillDrain(pair.remote)
 		if err != nil {
 			pair.closePipe()
 			return
 		}
-		data = data[5:]
+		gqserver.PeelRecordLayer(data)
 		_, err = pair.ss.Write(data)
 		if err != nil {
 			pair.closePipe()
@@ -92,10 +74,7 @@ func (pair *ssPair) serverToRemote() {
 	for {
 		data := []byte{}
 		pair.ss.Read(data)
-		msglen := make([]byte, 2)
-		binary.BigEndian.PutUint16(msglen, uint16(len(data)))
-		record := append([]byte{0x17, 0x03, 0x03}, msglen...)
-		data = append(record, data...)
+		gqserver.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
 		_, err := pair.remote.Write(data)
 		if err != nil {
 			pair.closePipe()

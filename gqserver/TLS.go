@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"net"
 	"time"
 )
 
@@ -47,9 +48,38 @@ func parseExtensions(input []byte) (ret map[[2]byte][]byte, err error) {
 	return ret, err
 }
 
-func peelRecordLayer(data []byte) (ret []byte, err error) {
-	ret = data[5:]
+// ReadTillDrain reads TLS data according to its record layer
+func ReadTillDrain(conn net.Conn) (ret []byte, err error) {
+	_, err = conn.Read(ret)
+	// Give 3 seconds to receive everything after initial data
+	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	msglen := BtoInt(ret[3:5])
+	for len(ret) < msglen {
+		var tempbuf []byte
+		_, err = conn.Read(tempbuf)
+		if err != nil {
+			return
+		}
+		ret = append(ret, tempbuf...)
+	}
+	conn.SetReadDeadline(time.Time{})
 	return
+}
+
+// AddRecordLayer adds record layer to data
+func AddRecordLayer(input []byte, typ []byte, ver []byte) []byte {
+	length := make([]byte, 2)
+	binary.BigEndian.PutUint16(length, uint16(len(input)))
+	ret := append(typ, ver...)
+	ret = append(ret, length...)
+	ret = append(ret, input...)
+	return ret
+}
+
+// PeelRecordLayer peels off the record layer
+func PeelRecordLayer(data []byte) []byte {
+	ret := data[5:]
+	return ret
 }
 
 // ParseClientHello parses everything on top of the TLS layer
@@ -60,7 +90,7 @@ func ParseClientHello(data []byte) (ret *ClientHello, err error) {
 			err = errors.New("Malformed ClientHello")
 		}
 	}()
-	data, err = peelRecordLayer(data)
+	data = PeelRecordLayer(data)
 	pointer := 0
 	// Handshake Type
 	handshakeType := data[pointer]
@@ -116,15 +146,6 @@ func ParseClientHello(data []byte) (ret *ClientHello, err error) {
 	return
 }
 
-func addRecordLayer(input []byte, typ []byte) []byte {
-	length := make([]byte, 2)
-	binary.BigEndian.PutUint16(length, uint16(len(input)))
-	ret := append(typ, []byte{0x03, 0x03}...)
-	ret = append(ret, length...)
-	ret = append(ret, input...)
-	return ret
-}
-
 func composeServerHello(ch *ClientHello) []byte {
 	var serverHello [10][]byte
 	serverHello[0] = []byte{0x02}             // handshake type
@@ -151,13 +172,14 @@ func composeServerHello(ch *ClientHello) []byte {
 // together with their respective record layers into one byte slice. The content
 // of these messages are random and useless for this plugin
 func ComposeReply(ch *ClientHello) []byte {
-	shBytes := addRecordLayer(composeServerHello(ch), []byte{0x16})
-	ccsBytes := addRecordLayer([]byte{0x01}, []byte{0x14})
+	TLS12 := []byte{0x03, 0x03}
+	shBytes := AddRecordLayer(composeServerHello(ch), []byte{0x16}, TLS12)
+	ccsBytes := AddRecordLayer([]byte{0x01}, []byte{0x14}, TLS12)
 	finished := make([]byte, 64)
 	r := rand.Uint64()
 	binary.BigEndian.PutUint64(finished, r)
 	finished = finished[0:40]
-	fBytes := addRecordLayer(finished, []byte{0x16})
+	fBytes := AddRecordLayer(finished, []byte{0x16}, TLS12)
 	ret := append(shBytes, ccsBytes...)
 	ret = append(ret, fBytes...)
 	return ret
