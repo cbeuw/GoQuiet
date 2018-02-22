@@ -25,8 +25,8 @@ aes_key = sha256(preshared_key)
 opaque = rand32int()
 
 # Random:
-goal = sha256(str(floor(gettimestamp()/ticket_time_hint)) + preshared_key)
 iv = randbytes(16)
+goal = sha256(str(floor(gettimestamp()/12*60*60)) + preshared_key)
 rest = aes_encrypt(iv,aes_key,goal[0:16])
 random = iv + rest
 
@@ -36,9 +36,12 @@ ticket = randbytes(192,seed=opaque+byte(preshared_key).to_int('big')+floor(getti
 
 Once the server receives the `ClientHello` message, it checks the `random` field. If it doesn't pass, the entire `ClientHello` is sent to the web server address set in the config file and the server then acts as a relay between the client and the web server. If it passes, the server then composes and sends `ServerHello`, `ChangeCipherSpec`, `Finished` together, and then client sends `ChangeCipherSpec`, `Finished` together. There are no useful informations in these messages. Then the server acts as a relay between the client and the shadowsocks server.
 
+## Replay prevention
+The `gettimestamp()/12*60*60` part is there to prevent replay:
+
+`random` field should be unique in each `ClientHello`. To check its uniqueness, the server caches cache the value of the `random` field. Obviously we cannot cache every `random` forever, we need to regularly clean the cache. If we set the cache expiration time to, say 12 hours, replay attemps within 12 hours will fail, but if the firewall saves the `ClientHello` and resend it 12 hours later, that message will pass the check on the server and our proxy is exposed. However, when `gettimestamp()/12*60*60` is in place, the replayed message will never pass the check because for replays within 12 hours, they fail to the cache; for replays after 12 hours, they fail to the uniqueness of the value of `gettimestamp()/12*60*60` for every 12 hours.
+
 ## Notes on the web server
-If you want the web server on your proxy machine to be functional, you need it to have a domain and a valid certificate. As for the domain, you can either register one at some cost, or use a DDNS service like noip for free. The certificate can be obtained from [Let's Encrypt](https://letsencrypt.org/) for free. (TODO: allow full TLS handshake using this cert)
+If you want to run a functional web server on your proxy machine, you need it to have a domain and a valid certificate. As for the domain, you can either register one at some cost, or use a DDNS service like noip for free. The certificate can be obtained from [Let's Encrypt](https://letsencrypt.org/) for free. (TODO: allow full TLS handshake using this cert)
 
-Or you can set the web server field in the config file as some external address.
-
-In the `ClientHello` message , there is a field called [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication), which gives the server's domain name in plaintext. This needs to be changed in the Config file to your own domain name if you are running the web server on the proxy machine, or the external website's domain name. The default is s3-us-west-2.amazonaws.com.
+Or you can set the `WebServerAddr` field in the server config file as an external IP, and set the `ServerDomainName` field in the client config file as the domain name of that ip. Because of the [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication) extension in the `ClientHello` message, the firewall knows the domain name someone is trying to access. If the firewall sends a `ClientHello` message to our proxy server with an SNI we used, the destination IP specified in `WebServerAddr` will receive this `ClientHello` message and the web server on that machine will check the SNI entry against its configuration. If they don't match, the web server will refuse to connect and show an error message, which could expose the fact that our proxy machine is not running a normal TLS web server. If you match the external IP with its domain name (e.g. `204.79.197.200` to `www.bing.com`), our proxy server will become, effectively to the observer, a server owned by that domain.
