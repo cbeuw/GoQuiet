@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"time"
 )
 
 // ClientHello contains every field in a ClientHello message
@@ -129,6 +130,7 @@ func composeServerHello(ch *ClientHello) []byte {
 	serverHello[0] = []byte{0x02}             // handshake type
 	serverHello[1] = []byte{0x00, 0x00, 0x4d} // length 77
 	serverHello[2] = []byte{0x03, 0x03}       // server version
+	rand.Seed(time.Now().UnixNano())
 	random := make([]byte, 32)
 	binary.BigEndian.PutUint32(random, rand.Uint32())
 	serverHello[3] = random                               // random
