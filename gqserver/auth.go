@@ -41,10 +41,9 @@ func IsSS(input *ClientHello, sta *State) bool {
 	mutex.Unlock()
 
 	h := sha256.New()
-	t := int(sta.Now().Unix()) / 12 * 60 * 60
+	t := int(sta.Now().Unix()) / (12 * 60 * 60)
 	h.Write([]byte(fmt.Sprintf("%v", t) + sta.Key))
 	goal := h.Sum(nil)[0:16]
 	plaintext := decrypt(input.random[0:16], sta.AESKey, input.random[16:])
 	return bytes.Equal(plaintext, goal)
-
 }

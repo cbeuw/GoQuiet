@@ -18,7 +18,7 @@ with open('../tests/auth/.base','rb') as f:
     cipher = AES.new(aes_key,AES.MODE_CFB,iv,segment_size=128)
     # segment_size has to be 128 because it's default to 8 in pycryptodome, but 128 in golang crypto/aes
     # ^it took me 3 hours to realise where I went wrong.
-    goal = hashlib.sha256((str(t//12*3600)+KEY).encode()).digest()[0:16]
+    goal = hashlib.sha256((str(t//(12*3600))+KEY).encode()).digest()[0:16]
     print("goal: " + goal.hex())
     out = cipher.encrypt(goal)
     out = iv + out
