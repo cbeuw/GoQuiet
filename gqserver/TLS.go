@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"time"
 )
@@ -49,12 +50,15 @@ func parseExtensions(input []byte) (ret map[[2]byte][]byte, err error) {
 
 // ReadTillDrain reads TLS data according to its record layer
 func ReadTillDrain(conn net.Conn) (ret []byte, err error) {
-	_, err = conn.Read(ret)
-	// Give 3 seconds to receive everything after initial data
+	ret = make([]byte, 1500)
+	_, err = io.ReadAtLeast(conn, ret, 5)
+	if err != nil {
+		return
+	}
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	msglen := BtoInt(ret[3:5])
 	for len(ret) < msglen {
-		var tempbuf []byte
+		tempbuf := make([]byte, 1500)
 		_, err = conn.Read(tempbuf)
 		if err != nil {
 			return

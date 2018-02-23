@@ -101,10 +101,10 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		go pair.remoteToServer()
 		go pair.serverToRemote()
 	}
-	data := []byte{}
+	data := make([]byte, 1500)
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	_, err := conn.Read(data)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		log.Println(err)
 		conn.Close()
 		return
@@ -125,11 +125,13 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	reply := gqserver.ComposeReply(ch)
 	_, err = conn.Write(reply)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 
 	_, err = conn.Read(reply)
-	if err != nil {
+	if err != nil && err != io.EOF {
+		log.Println(err)
 		return
 	}
 	goSS()
