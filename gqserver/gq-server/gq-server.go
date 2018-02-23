@@ -61,7 +61,7 @@ func (pair *ssPair) remoteToServer() {
 			pair.closePipe()
 			return
 		}
-		gqserver.PeelRecordLayer(data)
+		data = gqserver.PeelRecordLayer(data)
 		_, err = pair.ss.Write(data)
 		if err != nil {
 			pair.closePipe()
@@ -72,10 +72,11 @@ func (pair *ssPair) remoteToServer() {
 
 func (pair *ssPair) serverToRemote() {
 	for {
-		data := []byte{}
-		pair.ss.Read(data)
-		gqserver.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
-		_, err := pair.remote.Write(data)
+		buf := make([]byte, 1500)
+		i, err := pair.ss.Read(buf)
+		data := buf[:i]
+		data = gqserver.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
+		_, err = pair.remote.Write(data)
 		if err != nil {
 			pair.closePipe()
 			return
