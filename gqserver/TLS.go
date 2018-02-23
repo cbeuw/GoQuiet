@@ -50,20 +50,20 @@ func parseExtensions(input []byte) (ret map[[2]byte][]byte, err error) {
 
 // ReadTillDrain reads TLS data according to its record layer
 func ReadTillDrain(conn net.Conn) (ret []byte, err error) {
-	ret = make([]byte, 1500)
-	_, err = io.ReadAtLeast(conn, ret, 5)
+	buf := make([]byte, 1500)
+	i, err := io.ReadAtLeast(conn, buf, 5)
 	if err != nil {
 		return
 	}
+	ret = buf[:i]
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
-	msglen := BtoInt(ret[3:5])
+	msglen := BtoInt(buf[3:5])
 	for len(ret) < msglen {
-		tempbuf := make([]byte, 1500)
-		_, err = conn.Read(tempbuf)
-		if err != nil {
+		i, err = conn.Read(buf)
+		if err != nil && err != io.EOF {
 			return
 		}
-		ret = append(ret, tempbuf...)
+		ret = append(ret, buf[:i]...)
 	}
 	conn.SetReadDeadline(time.Time{})
 	return
