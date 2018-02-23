@@ -130,8 +130,8 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		log.Println(err)
 		return
 	}
-
-	_, err = conn.Read(reply)
+	discard := make([]byte, 500)
+	_, err = conn.Read(discard)
 	if err != nil && err != io.EOF {
 		log.Println(err)
 		return
