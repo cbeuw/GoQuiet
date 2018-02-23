@@ -73,7 +73,7 @@ func (pair *ssPair) remoteToServer() {
 func (pair *ssPair) serverToRemote() {
 	for {
 		buf := make([]byte, 1500)
-		i, err := pair.ss.Read(buf)
+		i, err := io.ReadAtLeast(pair.ss, buf, 1)
 		data := buf[:i]
 		data = gqserver.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
 		_, err = pair.remote.Write(data)
@@ -131,7 +131,7 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		return
 	}
 	discard := make([]byte, 500)
-	_, err = conn.Read(discard)
+	_, err = io.ReadAtLeast(conn, discard, 1)
 	if err != nil && err != io.EOF {
 		log.Println(err)
 		return
