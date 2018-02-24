@@ -109,8 +109,8 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	}
 	buf := make([]byte, 1500)
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
-	i, err := conn.Read(buf)
-	if err != nil && err != io.EOF {
+	i, err := io.ReadAtLeast(conn, buf, 1)
+	if err != nil {
 		log.Println(err)
 		go conn.Close()
 		return
@@ -130,6 +130,11 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	}
 	reply := gqserver.ComposeReply(ch)
 	_, err = conn.Write(reply)
+	if err != nil {
+		log.Println(err)
+		go conn.Close()
+		return
+	}
 	// Two discarded messages: ChangeCipherSpec and Finished
 	for c := 0; c < 2; c++ {
 		_, err = gqserver.ReadTillDrain(conn)
@@ -138,11 +143,6 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 			go conn.Close()
 			return
 		}
-	}
-	if err != nil {
-		log.Println(err)
-		go conn.Close()
-		return
 	}
 	goSS()
 }
