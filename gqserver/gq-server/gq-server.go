@@ -91,7 +91,9 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	goWeb := func(data []byte) {
 		pair, err := makeWebPipe(conn, sta)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			go conn.Close()
+			return
 		}
 		pair.webServer.Write(data)
 		go pair.remoteToServer()
@@ -133,11 +135,13 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		_, err = gqserver.ReadTillDrain(conn)
 		if err != nil {
 			log.Println(err)
+			go conn.Close()
 			return
 		}
 	}
 	if err != nil {
 		log.Println(err)
+		go conn.Close()
 		return
 	}
 	goSS()
