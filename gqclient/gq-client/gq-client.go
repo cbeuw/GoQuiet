@@ -81,10 +81,13 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 		log.Println(err)
 		return
 	}
-	_, err = gqclient.ReadTillDrain(remoteConn)
-	if err != nil {
-		log.Println(err)
-		return
+	// Three discarded messages: ServerHello, ChangeCipherSpec and Finished
+	for c := 0; c < 3; c++ {
+		_, err = gqclient.ReadTillDrain(remoteConn)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 	reply := gqclient.ComposeReply()
 	_, err = remoteConn.Write(reply)

@@ -1,7 +1,6 @@
 package gqclient
 
 import (
-	"bufio"
 	"encoding/binary"
 	"encoding/hex"
 	"io"
@@ -25,18 +24,11 @@ func ReadTillDrain(conn net.Conn) (ret []byte, err error) {
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	left := BtoInt(record[3:5])
 	for left != 0 {
-		buffered := bufio.NewReader(conn).Buffered()
-		// min(left,buffered)
-		// Read as much as the buffer has if we know the entire buffer
-		// belongs to this message, or only the part left if the buffer contains
-		// other stuff.
-		var toRead int
-		if left > buffered {
-			toRead = buffered
-		} else {
-			toRead = left
-		}
-		buf := make([]byte, toRead)
+		// If left > buffer size (i.e. our message got segmented), the entire MTU is read
+		// if left = buffer size, the entire buffer is all there left to read
+		// if left < buffer size (i.e. multiple messages came together),
+		// only the message we want is read
+		buf := make([]byte, left)
 		i, err = io.ReadFull(conn, buf)
 		if err != nil {
 			return
