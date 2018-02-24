@@ -126,11 +126,9 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		log.Printf("+1 non SS traffic from %v\n", conn.RemoteAddr())
 		goWeb(data)
 		return
-	} else {
-		log.Println("new ss")
 	}
-
 	reply := gqserver.ComposeReply(ch)
+	_, err = conn.Write(reply)
 	// Two discarded messages: ChangeCipherSpec and Finished
 	for c := 0; c < 2; c++ {
 		_, err = gqserver.ReadTillDrain(conn)
@@ -139,7 +137,6 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 			return
 		}
 	}
-	_, err = conn.Write(reply)
 	if err != nil {
 		log.Println(err)
 		return

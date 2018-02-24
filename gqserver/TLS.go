@@ -3,7 +3,6 @@ package gqserver
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"time"
@@ -28,7 +27,6 @@ type ClientHello struct {
 func parseExtensions(input []byte) (ret map[[2]byte][]byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println(r)
 			err = errors.New("Malformed Extensions")
 		}
 	}()
