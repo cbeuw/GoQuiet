@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"sync"
 	"time"
 )
 
@@ -169,17 +168,14 @@ func makeSSPipe(remote net.Conn, sta *gqserver.State) (*ssPair, error) {
 }
 
 func usedRandomCleaner(sta *gqserver.State) {
-	var mutex = &sync.Mutex{}
 	for {
 		time.Sleep(12 * time.Hour)
 		now := int(sta.Now().Unix())
-		mutex.Lock()
 		for key, t := range sta.UsedRandom {
 			if now-t > 12*3600 {
 				sta.DelUsedRandom(key)
 			}
 		}
-		mutex.Unlock()
 	}
 }
 

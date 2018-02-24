@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"io/ioutil"
+	"sync"
 	"time"
 )
 
@@ -27,6 +28,7 @@ type State struct {
 	SS_LOCAL_PORT  string
 	SS_REMOTE_HOST string
 	SS_REMOTE_PORT string
+	M              sync.RWMutex
 	UsedRandom     map[[32]byte]int
 }
 
@@ -51,9 +53,13 @@ func (sta *State) SetAESKey() {
 }
 
 func (sta *State) PutUsedRandom(random [32]byte) {
+	sta.M.Lock()
 	sta.UsedRandom[random] = int(sta.Now().Unix())
+	sta.M.Unlock()
 }
 
 func (sta *State) DelUsedRandom(random [32]byte) {
+	sta.M.Lock()
 	delete(sta.UsedRandom, random)
+	sta.M.Unlock()
 }

@@ -7,7 +7,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"log"
-	"sync"
 )
 
 func decrypt(iv []byte, key []byte, ciphertext []byte) []byte {
@@ -25,20 +24,16 @@ func IsSS(input *ClientHello, sta *State) bool {
 	var random [32]byte
 	copy(random[:], input.random)
 
-	var mutex = &sync.Mutex{}
-
-	mutex.Lock()
+	sta.M.Lock()
 	used := sta.UsedRandom[random]
-	mutex.Unlock()
+	sta.M.Unlock()
 
 	if used != 0 {
 		log.Println("Replay! Duplicate random")
 		return false
 	}
 
-	mutex.Lock()
 	sta.PutUsedRandom(random)
-	mutex.Unlock()
 
 	h := sha256.New()
 	t := int(sta.Now().Unix()) / (12 * 60 * 60)
