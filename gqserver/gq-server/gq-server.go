@@ -133,13 +133,13 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	reply := gqserver.ComposeReply(ch)
 	// Two discarded messages: ChangeCipherSpec and Finished
 	for c := 0; c < 2; c++ {
-		_, err = conn.Write(reply)
+		_, err = gqserver.ReadTillDrain(conn)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	}
-	_, err = gqserver.ReadTillDrain(conn)
+	_, err = conn.Write(reply)
 	if err != nil {
 		log.Println(err)
 		return
