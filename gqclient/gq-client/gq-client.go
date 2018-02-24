@@ -47,8 +47,7 @@ func (p *pair) ssToRemote() {
 	for {
 		buf := make([]byte, 10240)
 		i, err := io.ReadAtLeast(p.ss, buf, 1)
-		if err != nil && err != io.EOF {
-			log.Printf("ssToRemote: %v\n", err)
+		if err != nil {
 			p.closePipe()
 			return
 		}
