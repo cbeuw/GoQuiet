@@ -111,7 +111,6 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	i, err := io.ReadAtLeast(conn, buf, 1)
 	if err != nil {
-		log.Println(err)
 		go conn.Close()
 		return
 	}
