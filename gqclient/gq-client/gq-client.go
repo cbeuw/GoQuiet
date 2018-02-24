@@ -23,8 +23,8 @@ type pair struct {
 }
 
 func (p *pair) closePipe() {
-	p.ss.Close()
-	p.remote.Close()
+	go p.ss.Close()
+	go p.remote.Close()
 }
 
 func (p *pair) remoteToSS() {

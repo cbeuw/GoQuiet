@@ -27,13 +27,13 @@ type webPair struct {
 }
 
 func (pair *webPair) closePipe() {
-	pair.webServer.Close()
-	pair.remote.Close()
+	go pair.webServer.Close()
+	go pair.remote.Close()
 }
 
 func (pair *ssPair) closePipe() {
-	pair.ss.Close()
-	pair.remote.Close()
+	go pair.ss.Close()
+	go pair.remote.Close()
 }
 
 func (pair *webPair) serverToRemote() {
@@ -110,7 +110,7 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	i, err := conn.Read(buf)
 	if err != nil && err != io.EOF {
 		log.Println(err)
-		conn.Close()
+		go conn.Close()
 		return
 	}
 	conn.SetReadDeadline(time.Time{})
