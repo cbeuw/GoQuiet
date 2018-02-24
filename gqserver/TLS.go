@@ -1,6 +1,7 @@
 package gqserver
 
 import (
+	"bufio"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -50,19 +51,36 @@ func parseExtensions(input []byte) (ret map[[2]byte][]byte, err error) {
 
 // ReadTillDrain reads TLS data according to its record layer
 func ReadTillDrain(conn net.Conn) (ret []byte, err error) {
-	buf := make([]byte, 1500)
-	i, err := io.ReadAtLeast(conn, buf, 5)
+	// TCP is a stream. Multiple TLS messages can arrive at the same time,
+	// a single message can also be segmented due to MTU of the IP layer.
+	// This function guareentees a single TLS message to be read and everything
+	// else is left in the buffer.
+	record := make([]byte, 5)
+	i, err := io.ReadFull(conn, record)
 	if err != nil {
 		return
 	}
-	ret = buf[:i]
+	ret = record
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
-	msglen := BtoInt(buf[3:5])
-	for len(ret) < msglen {
-		i, err = conn.Read(buf)
-		if err != nil && err != io.EOF {
+	left := BtoInt(record[3:5])
+	for left != 0 {
+		buffered := bufio.NewReader(conn).Buffered()
+		// min(left,buffered)
+		// Read as much as the buffer has if we know the entire buffer
+		// belongs to this message, or only the part left if the buffer contains
+		// other stuff.
+		var toRead int
+		if left > buffered {
+			toRead = buffered
+		} else {
+			toRead = left
+		}
+		buf := make([]byte, toRead)
+		i, err = io.ReadFull(conn, buf)
+		if err != nil {
 			return
 		}
+		left -= i
 		ret = append(ret, buf[:i]...)
 	}
 	conn.SetReadDeadline(time.Time{})

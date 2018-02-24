@@ -34,6 +34,7 @@ func (p *pair) remoteToSS() {
 			p.closePipe()
 			return
 		}
+		log.Printf("%v received from server\n", len(data))
 		data = gqclient.PeelRecordLayer(data)
 		_, err = p.ss.Write(data)
 		if err != nil {
@@ -45,8 +46,14 @@ func (p *pair) remoteToSS() {
 
 func (p *pair) ssToRemote() {
 	for {
-		buf := make([]byte, 1500)
+		buf := make([]byte, 10240)
 		i, err := io.ReadAtLeast(p.ss, buf, 1)
+		if err != nil {
+			log.Println(err)
+			p.closePipe()
+			return
+		}
+		log.Printf("%v sent to server\n", i)
 		data := buf[:i]
 		data = gqclient.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
 		_, err = p.remote.Write(data)
@@ -74,8 +81,7 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 		log.Println(err)
 		return
 	}
-	discard := make([]byte, 500)
-	_, err = remoteConn.Read(discard)
+	_, err = gqclient.ReadTillDrain(remoteConn)
 	if err != nil {
 		log.Println(err)
 		return
