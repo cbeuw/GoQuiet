@@ -26,7 +26,7 @@ opaque = rand32int()
 
 # Random:
 iv = randbytes(16)
-goal = sha256(str(floor(gettimestamp()/12*60*60)) + preshared_key)
+goal = sha256(str(floor(gettimestamp()/(12*60*60))) + preshared_key)
 rest = aes_encrypt(iv,aes_key,goal[0:16])
 random = iv + rest
 
@@ -37,9 +37,9 @@ ticket = randbytes(192,seed=opaque+aes_key+floor(gettimestamp()/ticket_time_hint
 Once the server receives the `ClientHello` message, it checks the `random` field. If it doesn't pass, the entire `ClientHello` is sent to the web server address set in the config file and the server then acts as a relay between the client and the web server. If it passes, the server then composes and sends `ServerHello`, `ChangeCipherSpec`, `Finished` together, and then client sends `ChangeCipherSpec`, `Finished` together. There are no useful informations in these messages. Then the server acts as a relay between the client and the shadowsocks server.
 
 ## Replay prevention
-The `gettimestamp()/12*60*60` part is there to prevent replay:
+The `gettimestamp()/(12*60*60)` part is there to prevent replay:
 
-`random` field should be unique in each `ClientHello`. To check its uniqueness, the server caches the value of the `random` field. Obviously we cannot cache every `random` forever, we need to regularly clean the cache. If we set the cache expiration time to, say 12 hours, replay attemps within 12 hours will fail, but if the firewall saves the `ClientHello` and resend it 12 hours later, that message will pass the check on the server and our proxy is exposed. However, when `gettimestamp()/12*60*60` is in place, the replayed message will never pass the check because for replays within 12 hours, they fail to the cache; for replays after 12 hours, they fail to the uniqueness of the value of `gettimestamp()/12*60*60` for every 12 hours.
+`random` field should be unique in each `ClientHello`. To check its uniqueness, the server caches the value of the `random` field. Obviously we cannot cache every `random` forever, we need to regularly clean the cache. If we set the cache expiration time to, say 12 hours, replay attemps within 12 hours will fail, but if the firewall saves the `ClientHello` and resend it 12 hours later, that message will pass the check on the server and our proxy is exposed. However, when `gettimestamp()/(12*60*60)` is in place, the replayed message will never pass the check because for replays within 12 hours, they fail to the cache; for replays after 12 hours, they fail to the uniqueness of the value of `gettimestamp()/(12*60*60)` for every 12 hours.
 
 ## Notes on the web server
 If you want to run a functional web server on your proxy machine, you need it to have a domain and a valid certificate. As for the domain, you can either register one at some cost, or use a DDNS service like noip for free. The certificate can be obtained from [Let's Encrypt](https://letsencrypt.org/) for free. (TODO: allow full TLS handshake using this cert)
