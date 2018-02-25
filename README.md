@@ -7,7 +7,7 @@ and [simple-obfs](https://github.com/shadowsocks/simple-obfs) allows the server 
 
 This plugin merges these two functionalities together, and also prevents the firewall from identifiying the nature of the proxy server through replaying shadowsocks' traffic.
 
-Beyond the benefit of bypassing the firewall, it can also deceive traffic controls imposed by ISP. See section [Net Neutrality](#usage)
+Beyond the benefit of bypassing the firewall, it can also deceive traffic controls imposed by ISP. See [this section](#a-potential-gateway-to-free-internet-after-net-neutrality-repeal)
 
 This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses about the same CPU and memory as shadowsocks-libev (which is very little), and has almost no transmission overhead added on top of shadowsocks. Of course this project is still **very early into development, stability is therefore not guareented.**
 
@@ -68,10 +68,10 @@ If you want to run a functional web server on your proxy machine, you need it to
 
 Or you can set the `WebServerAddr` field in the server config file as an external IP, and set the `ServerDomainName` field in the client config file as the domain name of that ip. Because of the [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication) extension in the `ClientHello` message, the firewall knows the domain name someone is trying to access. If the firewall sends a `ClientHello` message to our proxy server with an SNI we used, the destination IP specified in `WebServerAddr` will receive this `ClientHello` message and the web server on that machine will check the SNI entry against its configuration. If they don't match, the web server will refuse to connect and show an error message, which could expose the fact that our proxy machine is not running a normal TLS web server. If you match the external IP with its domain name (e.g. `204.79.197.200` to `www.bing.com`), our proxy server will become, effectively to the observer, a server owned by that domain.
 
-## A potential gateway to free internet access after Net Neutrality Repeal 
+## A potential gateway to free internet after Net Neutrality Repeal 
 Given that American ISPs haven't yet started restricting internet traffic, we are not sure how they would implement it in the future. But some Chinese ISPs do selectively cause artificial packet loss based on the popularity of the protocol and/or its destination. For example, your HTTPS traffic to Baidu will be likely unaffected, but you will have a bad time trying to play Rainbow Six Siege. Should American ISPs go the same way, this plugin may help you to mitigate these restrictions:
 
-You buy an f1-micro instance on Google Cloud Platform which costs $3.88 per month (or free if your usage is within the free tier limit), you set up shadowsocks and gqserver plguin on that machine, and you set `ServerDomainName` in your client config to a Google-owned domain (like YouTube). If your broadband plan allows traffic to Google (which it would very likely do), you can deceive your ISP and pay no extra money to access the entirety of the Internet.
+You buy an f1-micro instance on Google Cloud Platform which costs $3.88 per month (or free if your usage is within the free tier limit), you set up shadowsocks and gqserver plguin on that machine, and you set `ServerDomainName` in your client config to a Google domain. If your broadband plan allows traffic to Google (which it would very likely do), you can deceive your ISP and pay no extra money to access the entirety of the Internet.
 
 To reduce your GCP usage cost or even maintain it within the free tier limit, you can even use the Access Control List functionality provided by shadowsocks, which only proxies the traffic you want to be proxied (the websites you didn't pay extra money for).
 
