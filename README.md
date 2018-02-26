@@ -1,4 +1,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/cbeuw/GoQuiet)](https://goreportcard.com/report/github.com/cbeuw/GoQuiet)
+
+[简体中文](https://github.com/cbeuw/GoQuiet/wiki/GoQuiet)
 # GoQuiet
 A shadowsocks plugin obfuscates the traffic as normal HTTPS traffic and disguises the proxy server as a normal webserver.
 
