@@ -7,7 +7,7 @@ and [simple-obfs](https://github.com/shadowsocks/simple-obfs) allows the server 
 
 This plugin merges these two functionalities together, and also prevents the firewall from identifiying the nature of the proxy server through replaying shadowsocks' traffic.
 
-Beyond the benefit of bypassing the firewall, it can also deceive traffic controls imposed by ISP. See [this section](#a-potential-gateway-to-free-internet-after-net-neutrality-repeal)
+Beyond the benefit of bypassing the firewall, it can also **deceive traffic restrictions imposed by ISP. See [this section](#a-potential-gateway-to-free-internet-after-net-neutrality-repeal)**
 
 This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses about the same CPU and memory as shadowsocks-libev (which is very little), and has almost no transmission overhead added on top of shadowsocks. Of course this project is still **very early into development, stability is therefore not guareented.**
 
@@ -16,16 +16,16 @@ This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses ab
 **Change the password in config file before using it**
 
 For server:
-`go build .../GoQuiet/gqserver/gq-server/`
+`go build .../GoQuiet/cmd/gq-server/`
 
-`ss-server -c <path-to-ss-config> --plugin <path-to-gq-server-binary> --plugin-opts "<path-to-gqserver.conf>"`
+`ss-server -c <path-to-ss-config> --plugin <path-to-gq-server-binary> --plugin-opts "<path-to-gqserver.json>"`
 
 For client:
-`go build .../GoQuiet/gqserver/gq-client/`
+`go build .../GoQuiet/cmd/gq-client/`
 
-`ss-local -c <path-to-ss-config> --plugin <path-to-gq-client-binary> --plugin-opts "<path-to-gqclient.conf>"`
+`ss-local -c <path-to-ss-config> --plugin <path-to-gq-client-binary> --plugin-opts "<path-to-gqclient.json>"`
 
-Or if you are using Shadowsocks client Windows GUI, put the path-to-gq-client.exe in Plugin field and path-to-gqclient.conf in Plugin Options field
+Or if you are using Shadowsocks client Windows GUI, put the `<path-to-gq-client.exe>` in Plugin field and `<path-to-gqclient.json>` in Plugin Options field
 
 Compiled binaries will be released at some point.
 
