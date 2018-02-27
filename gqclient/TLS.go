@@ -107,6 +107,8 @@ func addExtRec(typ []byte, data []byte) []byte {
 	return append(ret, data...)
 }
 
+// The following two functions are hardcoded for Chrome 64 and are ugly
+// TODO: diversify the browser characteristics
 func composeExtensions(sta *State) []byte {
 	var extensions [14][]byte
 	extensions[0] = addExtRec(makeGREASE(), nil)                          // First GREASE
@@ -154,11 +156,13 @@ func composeClientHello(sta *State) []byte {
 	return ret
 }
 
+// ComposeInitHandshake composes ClientHello with record layer
 func ComposeInitHandshake(sta *State) []byte {
 	ch := composeClientHello(sta)
 	return AddRecordLayer(ch, []byte{0x16}, []byte{0x03, 0x01})
 }
 
+// ComposeReply composes RL+ChangeCipherSpec+RL+Finished
 func ComposeReply() []byte {
 	TLS12 := []byte{0x03, 0x03}
 	ccsBytes := AddRecordLayer([]byte{0x01}, []byte{0x14}, TLS12)

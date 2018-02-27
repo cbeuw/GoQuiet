@@ -7,19 +7,18 @@ import (
 	"time"
 )
 
-type TimeFn func() time.Time
-
-type StateManager interface {
+type stateManager interface {
 	ParseConfig(string) error
 	SetAESKey(string)
 }
 
+// State stores global variables
 type State struct {
 	SS_LOCAL_HOST  string
 	SS_LOCAL_PORT  string
 	SS_REMOTE_HOST string
 	SS_REMOTE_PORT string
-	Now            TimeFn
+	Now            func() time.Time
 	Opaque         int
 	Key            string
 	TicketTimeHint int

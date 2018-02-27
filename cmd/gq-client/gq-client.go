@@ -62,7 +62,19 @@ func (p *pair) ssToRemote() {
 }
 
 func initSequence(ssConn net.Conn, sta *gqclient.State) {
+	// SS likes to make TCP connections and then immediately close it
+	// without sending anything. This is apperently a feature.
+	// But we don't want this because it may be significant to the GFW
+	// and we don't want to make meaningless handshakes.
+	// So we filter these empty connections
 	var err error
+	data := make([]byte, 1024)
+	i, err := io.ReadAtLeast(ssConn, data, 1)
+	if err != nil {
+		go ssConn.Close()
+	}
+	data = data[:i]
+
 	var remoteConn net.Conn
 	for trial := 0; err == nil && trial < 3; trial++ {
 		remoteConn, err = net.Dial("tcp", sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT)
@@ -94,6 +106,14 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 	p := pair{
 		ssConn,
 		remoteConn,
+	}
+
+	// Send the data we got from SS in the beginning
+	data = gqclient.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
+	_, err = p.remote.Write(data)
+	if err != nil {
+		p.closePipe()
+		return
 	}
 	go p.remoteToSS()
 	go p.ssToRemote()

@@ -6,7 +6,7 @@ import (
 )
 
 func TestParseConfig(t *testing.T) {
-	path := "../config/gqserver.conf"
+	path := "../config/gqserver.json"
 	sta := &State{}
 	err := sta.ParseConfig(path)
 	if err != nil {

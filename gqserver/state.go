@@ -8,10 +8,7 @@ import (
 	"time"
 )
 
-// TimeFn provides either the real current time or a fake time
-type TimeFn func() time.Time
-
-type StateManager interface {
+type stateManager interface {
 	ParseConfig(string) error
 	SetAESKey(string)
 	PutUsedRandom([32]byte)
@@ -23,7 +20,7 @@ type State struct {
 	WebServerAddr  string
 	Key            string
 	AESKey         []byte
-	Now            TimeFn
+	Now            func() time.Time
 	SS_LOCAL_HOST  string
 	SS_LOCAL_PORT  string
 	SS_REMOTE_HOST string
@@ -52,12 +49,14 @@ func (sta *State) SetAESKey() {
 	sta.AESKey = h.Sum(nil)
 }
 
+// PutUsedRandom adds a random field into map UsedRandom
 func (sta *State) PutUsedRandom(random [32]byte) {
 	sta.M.Lock()
 	sta.UsedRandom[random] = int(sta.Now().Unix())
 	sta.M.Unlock()
 }
 
+// DelUsedRandom deletes a random field from the map
 func (sta *State) DelUsedRandom(random [32]byte) {
 	sta.M.Lock()
 	delete(sta.UsedRandom, random)
