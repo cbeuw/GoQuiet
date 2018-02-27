@@ -13,23 +13,25 @@ Beyond the benefit of bypassing the firewall, it can also **deceive traffic rest
 
 This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses about the same CPU and memory as shadowsocks-libev (which is very little), and has almost no transmission overhead added on top of shadowsocks. Of course this project is still **very early into development, stability is therefore not guareented.**
 
+## Download
+
+**Download the binaries [here](https://github.com/cbeuw/GoQuiet/releases)**
+
+Or use `make client` or `make server` to build it yourself
+
 ## Usage
 
 **Change the password in config file before using it**
 
 For server:
-`go build .../GoQuiet/cmd/gq-server/`
 
 `ss-server -c <path-to-ss-config> --plugin <path-to-gq-server-binary> --plugin-opts "<path-to-gqserver.json>"`
 
 For client:
-`go build .../GoQuiet/cmd/gq-client/`
 
 `ss-local -c <path-to-ss-config> --plugin <path-to-gq-client-binary> --plugin-opts "<path-to-gqclient.json>"`
 
 Or if you are using Shadowsocks client Windows GUI, put the `<path-to-gq-client.exe>` in Plugin field and `<path-to-gqclient.json>` in Plugin Options field
-
-Compiled binaries will be released at some point.
 
 ## How it works
 As mentioned above, this plugin obfuscates shadowsocks' traffic as TLS traffic. This includes adding TLS Record Layer header to application data and simulating TLS handshake. Both of these are trivial to implement, but by manipulating data trasmitted in the handshake sequence, we can achieve some interesting things.
