@@ -4,12 +4,9 @@
 # GoQuiet
 A shadowsocks plugin obfuscates the traffic as normal HTTPS traffic and disguises the proxy server as a normal webserver.
 
-ShadowsocksR's `tls1.2_ticket_auth` allows shadowsocks' traffic to be preceived by the firewall as normal TLS traffic, 
-and [simple-obfs](https://github.com/shadowsocks/simple-obfs) allows the server to redirect non-shadowsocks traffic to a desired webserver, which defends against active detections from the firewall.
+The fundamental idea of obfuscating shadowsocks traffic as TLS traffic is not original. [simple-obfs](https://github.com/shadowsocks/simple-obfs) and ShadowsocksR's `tls1.2_ticket_auth` mode have shown this to be effective. This plugin has made [improvements](https://github.com/cbeuw/GoQuiet/wiki/Advantages-over-similar-obfuscators) so that the goal of this plugin is  **to make indiscriminate blocking of HTTPS servers (or even IP ranges) with high traffic the only effective way of stopping people from using shadowsocks.**
 
-This plugin merges these two functionalities together, and also prevents the firewall from identifiying the nature of the proxy server through replaying shadowsocks' traffic.
-
-Beyond the benefit of bypassing the firewall, it can also **deceive traffic restrictions imposed by ISP. See [this section](#a-potential-gateway-to-free-internet-after-net-neutrality-repeal)**
+Beyond the benefit of bypassing the firewall, it can also **deceive traffic restrictions imposed by ISP. See [this section](#a-potential-gateway-to-free-internet-after-net-neutrality-repeal).**
 
 This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses about the same CPU and memory as shadowsocks-libev (which is very little), and has almost no transmission overhead added on top of shadowsocks. Of course this project is still **very early into development, stability is therefore not guareented.**
 
