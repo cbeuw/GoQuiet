@@ -2,11 +2,13 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"github.com/cbeuw/GoQuiet/gqserver"
 	"io"
 	"log"
 	"net"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -183,19 +185,42 @@ func usedRandomCleaner(sta *gqserver.State) {
 }
 
 func main() {
-	sta := &gqserver.State{
-		SS_LOCAL_HOST: os.Getenv("SS_LOCAL_HOST"),
-		// Should be 127.0.0.1 unless the plugin and shadowsocks server are on seperate machines, which is not supported yet
-		SS_LOCAL_PORT: os.Getenv("SS_LOCAL_PORT"),
-		// SS loopback port, default set by SS to 8388
-		SS_REMOTE_HOST: os.Getenv("SS_REMOTE_HOST"),
-		// Outbound listening address, should be 0.0.0.0
-		SS_REMOTE_PORT: os.Getenv("SS_REMOTE_PORT"),
-		// Port exposed to the internet. Since this is a TLS obfuscator, this should be 443
-		Now:        time.Now,
-		UsedRandom: map[[32]byte]int{},
+	// Should be 127.0.0.1 to listen to ss-server on this machine
+	var localHost string
+	// server_port in ss config, same as remotePort in plugin mode
+	var localPort string
+	// server in ss config, the outbound listening ip
+	var remoteHost string
+	// Outbound listening ip, should be 443
+	var remotePort string
+	var configPath string
+	if os.Getenv("SS_LOCAL_HOST") != "" {
+		localHost = os.Getenv("SS_LOCAL_HOST")
+		localPort = os.Getenv("SS_LOCAL_PORT")
+		remoteHost = os.Getenv("SS_REMOTE_HOST")
+		remotePort = os.Getenv("SS_REMOTE_PORT")
+		configPath = os.Getenv("SS_PLUGIN_OPTIONS")
+	} else {
+		localAddr := flag.String("r", "", "localAddr: 127.0.0.1:server_port as set in SS config")
+		flag.StringVar(&remoteHost, "s", "0.0.0.0", "remoteHost: outbound listing ip, set to 0.0.0.0 to listen to everything")
+		flag.StringVar(&remotePort, "p", "443", "remotePort: outbound listing port, should be 443")
+		flag.StringVar(&configPath, "c", "gqserver.json", "configPath: path to gqserver.json")
+		flag.Parse()
+		if *localAddr == "" {
+			log.Fatal("Must specify localAddr")
+		}
+		localHost = strings.Split(*localAddr, ":")[0]
+		localPort = strings.Split(*localAddr, ":")[1]
+		log.Printf("Starting standalone mode, listening on %v:%v to ss at %v:%v\n", remoteHost, remotePort, localHost, localPort)
 	}
-	configPath := os.Getenv("SS_PLUGIN_OPTIONS")
+	sta := &gqserver.State{
+		SS_LOCAL_HOST:  localHost,
+		SS_LOCAL_PORT:  localPort,
+		SS_REMOTE_HOST: remoteHost,
+		SS_REMOTE_PORT: remotePort,
+		Now:            time.Now,
+		UsedRandom:     map[[32]byte]int{},
+	}
 	err := sta.ParseConfig(configPath)
 	if err != nil {
 		log.Fatalf("Configuration file error: %v", err)

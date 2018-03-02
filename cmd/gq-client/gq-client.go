@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/cbeuw/GoQuiet/gqclient"
 	"github.com/cbeuw/GoQuiet/gqclient/TLS"
 	"io"
@@ -123,21 +124,45 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 }
 
 func main() {
+	// Should be 127.0.0.1 to listen to ss-local on this machine
+	var localHost string
+	// server_port in ss config, ss sends data on loopback using this port
+	var localPort string
+	// The ip of the proxy server
+	var remoteHost string
+	// The proxy port,should be 443
+	var remotePort string
+	var configPath string
+	if os.Getenv("SS_LOCAL_HOST") != "" {
+		localHost = os.Getenv("SS_LOCAL_HOST")
+		localPort = os.Getenv("SS_LOCAL_PORT")
+		remoteHost = os.Getenv("SS_REMOTE_HOST")
+		remotePort = os.Getenv("SS_REMOTE_PORT")
+		configPath = os.Getenv("SS_PLUGIN_OPTIONS")
+	} else {
+		localHost = "127.0.0.1"
+		flag.StringVar(&localPort, "l", "", "localPort: same as server_port in ss config, the plugin listens to SS using this")
+		flag.StringVar(&remoteHost, "s", "", "remoteHost: IP of your proxy server")
+		flag.StringVar(&remotePort, "p", "443", "remotePort: proxy port, should be 443")
+		flag.StringVar(&configPath, "c", "gqclient.json", "configPath: path to gqclient.json")
+		flag.Parse()
+		if localPort == "" {
+			log.Fatal("Must specify localPort")
+		}
+		if remoteHost == "" {
+			log.Fatal("Must specify remoteHost")
+		}
+		log.Printf("Starting standalone mode. Listening for ss on %v:%v\n", localHost, localPort)
+	}
 	opaque := gqclient.BtoInt(gqclient.CryptoRandBytes(32))
 	sta := &gqclient.State{
-		SS_LOCAL_HOST: os.Getenv("SS_LOCAL_HOST"),
-		// IP address of this plugin listening. Should be 127.0.0.1
-		SS_LOCAL_PORT: os.Getenv("SS_LOCAL_PORT"),
-		// The remote port set in SS, default to 8388
-		SS_REMOTE_HOST: os.Getenv("SS_REMOTE_HOST"),
-		// IP address of the proxy server with the server side of this plugin running
-		SS_REMOTE_PORT: os.Getenv("SS_REMOTE_PORT"),
-		// Port number of the proxy server with the server side of this plugin running
-		// should be 443
-		Now:    time.Now,
-		Opaque: opaque,
+		SS_LOCAL_HOST:  localHost,
+		SS_LOCAL_PORT:  localPort,
+		SS_REMOTE_HOST: remoteHost,
+		SS_REMOTE_PORT: remotePort,
+		Now:            time.Now,
+		Opaque:         opaque,
 	}
-	configPath := os.Getenv("SS_PLUGIN_OPTIONS")
 	err := sta.ParseConfig(configPath)
 	if err != nil {
 		log.Fatal(err)
