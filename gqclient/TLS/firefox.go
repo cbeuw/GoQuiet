@@ -10,24 +10,15 @@ type firefox struct {
 	browser
 }
 
-func newFirefox() *firefox {
-	return &firefox{}
-}
-
-func (f *firefox) makeSupportedGroups() []byte {
-	suppGroupListLen := []byte{0x00, 0x08}
-	suppGroup, _ := hex.DecodeString("001d001700180019")
-	return append(suppGroupListLen, suppGroup...)
-}
-
 func (f *firefox) composeExtensions(sta *gqclient.State) []byte {
 	var ext [10][]byte
-	ext[0] = addExtRec([]byte{0x00, 0x00}, makeServerName(sta))     // server name indication
-	ext[1] = addExtRec([]byte{0x00, 0x17}, nil)                     // extended_master_secret
-	ext[2] = addExtRec([]byte{0xff, 0x01}, []byte{0x00})            // renegotiation_info
-	ext[3] = addExtRec([]byte{0x00, 0x0a}, f.makeSupportedGroups()) // supported groups
-	ext[4] = addExtRec([]byte{0x00, 0x0b}, []byte{0x01, 0x00})      // ec point formats
-	ext[5] = addExtRec([]byte{0x00, 0x23}, makeSessionTicket(sta))  // Session tickets
+	ext[0] = addExtRec([]byte{0x00, 0x00}, makeServerName(sta)) // server name indication
+	ext[1] = addExtRec([]byte{0x00, 0x17}, nil)                 // extended_master_secret
+	ext[2] = addExtRec([]byte{0xff, 0x01}, []byte{0x00})        // renegotiation_info
+	suppGroup, _ := hex.DecodeString("0008001d001700180019")
+	ext[3] = addExtRec([]byte{0x00, 0x0a}, suppGroup)              // supported groups
+	ext[4] = addExtRec([]byte{0x00, 0x0b}, []byte{0x01, 0x00})     // ec point formats
+	ext[5] = addExtRec([]byte{0x00, 0x23}, makeSessionTicket(sta)) // Session tickets
 	APLN, _ := hex.DecodeString("000c02683208687474702f312e31")
 	ext[6] = addExtRec([]byte{0x00, 0x10}, APLN)                                 // app layer proto negotiation
 	ext[7] = addExtRec([]byte{0x00, 0x05}, []byte{0x01, 0x00, 0x00, 0x00, 0x00}) // status request

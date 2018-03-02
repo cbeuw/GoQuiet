@@ -56,7 +56,6 @@ func PeelRecordLayer(data []byte) []byte {
 }
 
 type browser interface {
-	makeSupportedGroups()
 	composeExtensions()
 	composeClientHello()
 }
@@ -101,9 +100,9 @@ func ComposeInitHandshake(sta *gqclient.State) []byte {
 	var ch []byte
 	switch sta.Browser {
 	case "chrome":
-		ch = newChrome().composeClientHello(sta)
+		ch = (&chrome{}).composeClientHello(sta)
 	case "firefox":
-		ch = newFirefox().composeClientHello(sta)
+		ch = (&firefox{}).composeClientHello(sta)
 	default:
 		panic("Unsupported browser:" + sta.Browser)
 	}
