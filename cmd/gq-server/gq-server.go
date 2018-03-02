@@ -91,7 +91,7 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	goWeb := func(data []byte) {
 		pair, err := makeWebPipe(conn, sta)
 		if err != nil {
-			log.Println(err)
+			log.Printf("Making connection to redirection server: %v\n", err)
 			go conn.Close()
 			return
 		}
@@ -102,7 +102,7 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	goSS := func() {
 		pair, err := makeSSPipe(conn, sta)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Making connection to ss-server: %v\n", err)
 		}
 		go pair.remoteToServer()
 		go pair.serverToRemote()
@@ -130,7 +130,7 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	reply := gqserver.ComposeReply(ch)
 	_, err = conn.Write(reply)
 	if err != nil {
-		log.Println(err)
+		log.Printf("Sending reply to remote: %v\n", err)
 		go conn.Close()
 		return
 	}
@@ -138,7 +138,7 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	for c := 0; c < 2; c++ {
 		_, err = gqserver.ReadTillDrain(conn)
 		if err != nil {
-			log.Println(err)
+			log.Printf("Reading discarded message %v: %v\n", err)
 			go conn.Close()
 			return
 		}

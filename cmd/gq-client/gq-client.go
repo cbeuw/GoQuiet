@@ -87,21 +87,21 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 	clientHello := TLS.ComposeInitHandshake(sta)
 	_, err = remoteConn.Write(clientHello)
 	if err != nil {
-		log.Println(err)
+		log.Printf("Sending ClientHello to remote: %v\n", err)
 		return
 	}
 	// Three discarded messages: ServerHello, ChangeCipherSpec and Finished
 	for c := 0; c < 3; c++ {
 		_, err = TLS.ReadTillDrain(remoteConn)
 		if err != nil {
-			log.Println(err)
+			log.Printf("Reading discarded message %v: %v\n", c, err)
 			return
 		}
 	}
 	reply := TLS.ComposeReply()
 	_, err = remoteConn.Write(reply)
 	if err != nil {
-		log.Println(err)
+		log.Printf("Sending reply to remote: %v\n", err)
 		return
 	}
 	p := pair{
@@ -113,6 +113,7 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 	data = TLS.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
 	_, err = p.remote.Write(data)
 	if err != nil {
+		log.Printf("Sending first SS data to remote: %v\n", err)
 		p.closePipe()
 		return
 	}
