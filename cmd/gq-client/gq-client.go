@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/cbeuw/GoQuiet/gqclient"
+	"github.com/cbeuw/GoQuiet/gqclient/TLS"
 	"io"
 	"log"
 	"net"
@@ -29,12 +30,12 @@ func (p *pair) closePipe() {
 
 func (p *pair) remoteToSS() {
 	for {
-		data, err := gqclient.ReadTillDrain(p.remote)
+		data, err := TLS.ReadTillDrain(p.remote)
 		if err != nil {
 			p.closePipe()
 			return
 		}
-		data = gqclient.PeelRecordLayer(data)
+		data = TLS.PeelRecordLayer(data)
 		_, err = p.ss.Write(data)
 		if err != nil {
 			p.closePipe()
@@ -52,7 +53,7 @@ func (p *pair) ssToRemote() {
 			return
 		}
 		data := buf[:i]
-		data = gqclient.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
+		data = TLS.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
 		_, err = p.remote.Write(data)
 		if err != nil {
 			p.closePipe()
@@ -83,7 +84,7 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 		log.Println("Failed to connect to the proxy server")
 		return
 	}
-	clientHello := gqclient.ComposeInitHandshake(sta)
+	clientHello := TLS.ComposeInitHandshake(sta)
 	_, err = remoteConn.Write(clientHello)
 	if err != nil {
 		log.Println(err)
@@ -91,13 +92,13 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 	}
 	// Three discarded messages: ServerHello, ChangeCipherSpec and Finished
 	for c := 0; c < 3; c++ {
-		_, err = gqclient.ReadTillDrain(remoteConn)
+		_, err = TLS.ReadTillDrain(remoteConn)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	}
-	reply := gqclient.ComposeReply()
+	reply := TLS.ComposeReply()
 	_, err = remoteConn.Write(reply)
 	if err != nil {
 		log.Println(err)
@@ -109,7 +110,7 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 	}
 
 	// Send the data we got from SS in the beginning
-	data = gqclient.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
+	data = TLS.AddRecordLayer(data, []byte{0x17}, []byte{0x03, 0x03})
 	_, err = p.remote.Write(data)
 	if err != nil {
 		p.closePipe()

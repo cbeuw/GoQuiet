@@ -15,7 +15,8 @@ func encrypt(iv []byte, key []byte, plaintext []byte) []byte {
 	return ciphertext
 }
 
-func makeRandomField(sta *State) []byte {
+// MakeRandomField makes the random value that can pass the check at server side
+func MakeRandomField(sta *State) []byte {
 	h := sha256.New()
 	t := int(sta.Now().Unix()) / (12 * 60 * 60)
 	h.Write([]byte(fmt.Sprintf("%v", t) + sta.Key))

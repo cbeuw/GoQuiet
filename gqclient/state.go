@@ -24,6 +24,7 @@ type State struct {
 	TicketTimeHint int
 	AESKey         []byte
 	ServerName     string
+	Browser        string
 }
 
 // ParseConfig parses the config file into a State variable
