@@ -2,13 +2,13 @@
 
 [简体中文](https://github.com/cbeuw/GoQuiet/wiki/GoQuiet)
 # GoQuiet
-A shadowsocks plugin obfuscates the traffic as normal HTTPS traffic and disguises the proxy server as a normal webserver.
+A shadowsocks plugin that obfuscates the traffic as normal HTTPS traffic and disguises the proxy server as a normal webserver.
 
 The fundamental idea of obfuscating shadowsocks traffic as TLS traffic is not original. [simple-obfs](https://github.com/shadowsocks/simple-obfs) and ShadowsocksR's `tls1.2_ticket_auth` mode have shown this to be effective. This plugin has made [improvements](https://github.com/cbeuw/GoQuiet/wiki/Advantages-over-similar-obfuscators) so that the goal of this plugin is  **to make indiscriminate blocking of HTTPS servers (or even IP ranges) with high traffic the only effective way of stopping people from using shadowsocks.**
 
-Beyond the benefit of bypassing the firewall, it can also **deceive traffic restrictions imposed by ISP. See [this section](#a-potential-gateway-to-free-internet-after-net-neutrality-repeal).**
+Beyond the benefit of bypassing the firewall, it can also **cheat traffic restrictions imposed by ISP. See [here](https://github.com/cbeuw/GoQuiet/wiki/A-potential-gateway-to-free-internet-after-Net-Neutrality-Repeal).**
 
-This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses about the same CPU and memory as shadowsocks-libev (which is very little), and has almost no transmission overhead added on top of shadowsocks. Of course this project is still **very early into development, stability is therefore not guareented.**
+This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses about the same CPU and memory as shadowsocks-libev (which is very little), and has almost no transmission overhead added on top of shadowsocks. 
 
 ## Download
 
@@ -18,7 +18,9 @@ Or use `make client` or `make server` to build it yourself
 
 ## Usage
 
-**Change the password in config file before using it**
+**Change the key in config file before using it. It can be the same as shadowsocks' password**
+
+### Plugin mode
 
 For server:
 
@@ -29,6 +31,40 @@ For client:
 `ss-local -c <path-to-ss-config> --plugin <path-to-gq-client-binary> --plugin-opts "<path-to-gqclient.json>"`
 
 Or if you are using Shadowsocks client Windows GUI, put the `<path-to-gq-client.exe>` in Plugin field and `<path-to-gqclient.json>` in Plugin Options field
+
+### Standalone mode
+
+Standalone mode should only be used if your shadowsocks port does not support plugins
+
+For server:
+```
+gq-server -r 127.0.0.1:8388 -c <path-to-gqserver.json>
+ss-server -c <path-to-ss-config> -s 127.0.0.1 -p 8388
+```
+For client:
+```
+gq-client -s <server_ip> -l 1984 -c <path-to-gqclient.json>
+ss-local -c <path-to-ss-config> -s 127.0.0.1 -p 1984 -l 1080
+```
+
+### Configuration
+
+For server:
+
+`WebServerAddr` is the redirection address and port when the incoming traffic is not from shadowsocks. It be the IP record of the `ServerName` set in `gqclient.json`
+
+`Key` is the key. This needs to be the same as the `Key` set in `gqclient.json`
+
+For client:
+
+`ServerName` is the domain you want to make the GFW think you are visiting
+
+`Key` is the key
+
+`TicketTimeHint` is the time needed for a session ticket to expire and a new one to be generated. Leave it as the default.
+
+`Browser` is the browser you want to make the GFW think you are using. Currently support `chrome` and `firefox`.
+
 
 ## How it works
 As mentioned above, this plugin obfuscates shadowsocks' traffic as TLS traffic. This includes adding TLS Record Layer header to application data and simulating TLS handshake. Both of these are trivial to implement, but by manipulating data trasmitted in the handshake sequence, we can achieve some interesting things.
@@ -62,18 +98,9 @@ Once the server receives the `ClientHello` message, it checks the `random` field
 ### Replay prevention
 The `gettimestamp()/(12*60*60)` part is there to prevent replay:
 
-`random` field should be unique in each `ClientHello`. To check its uniqueness, the server caches the value of the `random` field. Obviously we cannot cache every `random` forever, we need to regularly clean the cache. If we set the cache expiration time to, say 12 hours, replay attemps within 12 hours will fail, but if the firewall saves the `ClientHello` and resend it 12 hours later, that message will pass the check on the server and our proxy is exposed. However, when `gettimestamp()/(12*60*60)` is in place, the replayed message will never pass the check because for replays within 12 hours, they fail to the cache; for replays after 12 hours, they fail to the uniqueness of the value of `gettimestamp()/(12*60*60)` for every 12 hours.
+The `random` field should be unique in each `ClientHello`. To check its uniqueness, the server caches the value of the `random` field. Obviously we cannot cache every `random` forever, we need to regularly clean the cache. If we set the cache expiration time to, say 12 hours, replay attemps within 12 hours will fail, but if the firewall saves the `ClientHello` and resend it 12 hours later, that message will pass the check on the server and our proxy is exposed. However, when `gettimestamp()/(12*60*60)` is in place, the replayed message will never pass the check because for replays within 12 hours, they fail to the cache; for replays after 12 hours, they fail to the uniqueness of the value of `gettimestamp()/(12*60*60)` for every 12 hours.
 
 ### Notes on the web server
-If you want to run a functional web server on your proxy machine, you need it to have a domain and a valid certificate. As for the domain, you can either register one at some cost, or use a DDNS service like noip for free. The certificate can be obtained from [Let's Encrypt](https://letsencrypt.org/) for free. (TODO: allow full TLS handshake using this cert)
+If you want to run a functional web server on your proxy machine, you need it to have a domain and a valid certificate. As for the domain, you can either register one at some cost, or use a DDNS service like noip for free. The certificate can be obtained from [Let's Encrypt](https://letsencrypt.org/) for free. 
 
 Or you can set the `WebServerAddr` field in the server config file as an external IP, and set the `ServerDomainName` field in the client config file as the domain name of that ip. Because of the [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication) extension in the `ClientHello` message, the firewall knows the domain name someone is trying to access. If the firewall sends a `ClientHello` message to our proxy server with an SNI we used, the destination IP specified in `WebServerAddr` will receive this `ClientHello` message and the web server on that machine will check the SNI entry against its configuration. If they don't match, the web server will refuse to connect and show an error message, which could expose the fact that our proxy machine is not running a normal TLS web server. If you match the external IP with its domain name (e.g. `204.79.197.200` to `www.bing.com`), our proxy server will become, effectively to the observer, a server owned by that domain.
-
-## A potential gateway to free internet after Net Neutrality Repeal 
-Given that American ISPs haven't yet started restricting internet traffic, we are not sure how they would implement it in the future. But some Chinese ISPs do selectively cause artificial packet loss based on the popularity of the protocol and/or its destination. For example, your HTTPS traffic to Baidu will be likely unaffected, but you will have a bad time trying to play Rainbow Six Siege. Should American ISPs go the same way, this plugin may help you to mitigate these restrictions:
-
-You buy an f1-micro instance on Google Cloud Platform which costs $3.88 per month (or free if your usage is within the free tier limit), you set up shadowsocks and gqserver plguin on that machine, and you set `ServerDomainName` in your client config to a Google domain. If your broadband plan allows traffic to Google (which it would very likely do), you can deceive your ISP and pay no extra money to access the entirety of the Internet.
-
-To reduce your GCP usage cost or even maintain it within the free tier limit, you can even use the Access Control List functionality provided by shadowsocks, which only proxies the traffic you want to be proxied (the websites you didn't pay extra money for).
-
-This may be extremely useful if the ISPs turn out to use a whitelist to restrict access to the Internet (i.e. specify what is allowed and blocks everything else, hence you can't use VPN). Of course, these are just speculation. I don't want to see Americans using tools designed to mitigate Internet censorship to access a free Internet
