@@ -104,3 +104,19 @@ The `random` field should be unique in each `ClientHello`. To check its uniquene
 If you want to run a functional web server on your proxy machine, you need it to have a domain and a valid certificate. As for the domain, you can either register one at some cost, or use a DDNS service like noip for free. The certificate can be obtained from [Let's Encrypt](https://letsencrypt.org/) for free. 
 
 Or you can set the `WebServerAddr` field in the server config file as an external IP, and set the `ServerName` field in the client config file as the domain name of that ip. Because of the [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication) extension in the `ClientHello` message, the firewall knows the domain name someone is trying to access. If the firewall sends a `ClientHello` message to our proxy server with an SNI we used, the destination IP specified in `WebServerAddr` will receive this `ClientHello` message and the web server on that machine will check the SNI entry against its configuration. If they don't match, the web server will refuse to connect and show an error message, which could expose the fact that our proxy machine is not running a normal TLS web server. If you match the external IP with its domain name (e.g. `204.79.197.200` to `www.bing.com`), our proxy server will become, effectively to the observer, a server owned by that domain.
+
+## Summary of Instructions for Windows Client Users
+
+1. Download and unzip the latest release of the [Shadowsocks Windows client](https://github.com/shadowsocks/shadowsocks-windows/releases/).
+
+2. Download the latest release of the [GoQuiet Client for Windows exe](https://github.com/cbeuw/GoQuiet/releases/), and place it in same the folder as your Shadowsocks exe.
+
+3. Create a file `gqclient.json` whose content match those on the server.
+
+![Example of gqclient.json file](goquiet-screenshot-02.png)
+
+4. Start Shadowsocks, and fill in parameters matching your Shadowsocks server, your GoQuiet client plugin exe, and your GoQuiet plugin `config.json` file.
+
+![Example of Shadowsocks configuration on client](goquiet-screenshot-01.png)
+
+5. Set up Firefox or Chrome to send their traffic to your Shadowsocks prox, which is now listening on IP address 127.0.0.1 port 1080.
