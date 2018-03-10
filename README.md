@@ -113,10 +113,10 @@ Or you can set the `WebServerAddr` field in the server config file as an externa
 
 3. Create a file `gqclient.json` whose content matches with those on the server.
 
-![Example of gqclient.json file](goquiet-screenshot-02.png)
+![Example of gqclient.json file](https://user-images.githubusercontent.com/7034308/37244688-b65501ce-2484-11e8-9a26-7e8fe6d95d05.png)
 
 4. Start Shadowsocks, and fill in the parameters matching your Shadowsocks server, your GoQuiet client plugin exe, and your GoQuiet plugin `gqclient.json` file.
 
-![Example of Shadowsocks configuration on client](goquiet-screenshot-01.png)
+![Example of Shadowsocks configuration on client](https://user-images.githubusercontent.com/7034308/37244707-ef1cf3ae-2484-11e8-9493-bbfd6084da8d.png)
 
 5. Configure your system or browser proxy settings to 127.0.0.1 port 1080.
