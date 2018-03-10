@@ -63,7 +63,7 @@ For client:
 
 `TicketTimeHint` is the time needed for a session ticket to expire and a new one to be generated. Leave it as the default.
 
-`Browser` is the browser you want to make the GFW think you are using. Currently support `chrome` and `firefox`.
+`Browser` is the browser you want to **make the GFW _think_ you are using, it has NOTHING to do with the web browser or any web application you are using on your machine**. Currently support `chrome` and `firefox`.
 
 
 ## How it works
@@ -101,7 +101,7 @@ The `gettimestamp()/(12*60*60)` part is there to prevent replay:
 The `random` field should be unique in each `ClientHello`. To check its uniqueness, the server caches the value of the `random` field. Obviously we cannot cache every `random` forever, we need to regularly clean the cache. If we set the cache expiration time to, say 12 hours, replay attemps within 12 hours will fail, but if the firewall saves the `ClientHello` and resend it 12 hours later, that message will pass the check on the server and our proxy is exposed. However, when `gettimestamp()/(12*60*60)` is in place, the replayed message will never pass the check because for replays within 12 hours, they fail to the cache; for replays after 12 hours, they fail to the uniqueness of the value of `gettimestamp()/(12*60*60)` for every 12 hours.
 
 ### Notes on the web server
-If you want to run a functional web server on your proxy machine, you need it to have a domain and a valid certificate. As for the domain, you can either register one at some cost, or use a DDNS service like noip for free. The certificate can be obtained from [Let's Encrypt](https://letsencrypt.org/) for free. 
+If you want to run a functional web server on your proxy machine, you need it to have a domain and a valid certificate. As for the domain, you can either register one at some cost, or use a DDNS service like noip for free. The certificate can be obtained from [Let's Encrypt](https://letsencrypt.org/) for free. **The certificate is for your web server (e.g. Apache and Nginx) only. The GoQuiet plugin does not need a certificate.**
 
 Or you can set the `WebServerAddr` field in the server config file as an external IP, and set the `ServerName` field in the client config file as the domain name of that ip. Because of the [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication) extension in the `ClientHello` message, the firewall knows the domain name someone is trying to access. If the firewall sends a `ClientHello` message to our proxy server with an SNI we used, the destination IP specified in `WebServerAddr` will receive this `ClientHello` message and the web server on that machine will check the SNI entry against its configuration. If they don't match, the web server will refuse to connect and show an error message, which could expose the fact that our proxy machine is not running a normal TLS web server. If you match the external IP with its domain name (e.g. `204.79.197.200` to `www.bing.com`), our proxy server will become, effectively to the observer, a server owned by that domain.
 
@@ -111,12 +111,12 @@ Or you can set the `WebServerAddr` field in the server config file as an externa
 
 2. Download the latest release of the [GoQuiet Client for Windows exe](https://github.com/cbeuw/GoQuiet/releases/), and place it in same the folder as your Shadowsocks exe.
 
-3. Create a file `gqclient.json` whose content match those on the server.
+3. Create a file `gqclient.json` whose content matches with those on the server.
 
 ![Example of gqclient.json file](goquiet-screenshot-02.png)
 
-4. Start Shadowsocks, and fill in parameters matching your Shadowsocks server, your GoQuiet client plugin exe, and your GoQuiet plugin `config.json` file.
+4. Start Shadowsocks, and fill in the parameters matching your Shadowsocks server, your GoQuiet client plugin exe, and your GoQuiet plugin `gqclient.json` file.
 
 ![Example of Shadowsocks configuration on client](goquiet-screenshot-01.png)
 
-5. Set up Firefox or Chrome to send their traffic to your Shadowsocks prox, which is now listening on IP address 127.0.0.1 port 1080.
+5. Configure your system or browser proxy settings to 127.0.0.1 port 1080.
