@@ -109,14 +109,14 @@ Or you can set the `WebServerAddr` field in the server config file as an externa
 
 1. Download and unzip the latest release of the [Shadowsocks Windows client](https://github.com/shadowsocks/shadowsocks-windows/releases/).
 
-2. Download the latest release of the [GoQuiet Windows exe](https://github.com/cbeuw/GoQuiet/releases/), and place it in same the folder as your Shadowsocks exe.
+2. Download the latest release of the [GoQuiet Client for Windows exe](https://github.com/cbeuw/GoQuiet/releases/), and place it in same the folder as your Shadowsocks exe.
 
 3. Create a file `gqclient.json` whose content match those on the server.
 
-![Example of gqclient.json file](goquiet-screenshot-01.png)
+![Example of gqclient.json file](goquiet-screenshot-02.png)
 
 4. Start Shadowsocks, and fill in parameters matching your Shadowsocks server, your GoQuiet client plugin exe, and your GoQuiet plugin `config.json` file.
 
-![Example of Shadowsocks configuration on client](goquiet-screenshot-02.png)
+![Example of Shadowsocks configuration on client](goquiet-screenshot-01.png)
 
 5. Set up Firefox or Chrome to send their traffic to your Shadowsocks prox, which is now listening on IP address 127.0.0.1 port 1080.
