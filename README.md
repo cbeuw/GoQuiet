@@ -107,6 +107,8 @@ Or you can set the `WebServerAddr` field in the server config file as an externa
 
 ## Summary of Instructions for Windows Client Users
 
+[Video guide](https://www.youtube.com/watch?v=V9clEjav6zY)
+
 1. Download and unzip the latest release of the [Shadowsocks Windows client](https://github.com/shadowsocks/shadowsocks-windows/releases/).
 
 2. Download the latest release of the [GoQuiet Client for Windows exe](https://github.com/cbeuw/GoQuiet/releases/), and place it in same the folder as your Shadowsocks exe.
