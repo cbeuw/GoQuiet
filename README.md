@@ -43,7 +43,7 @@ or as value of `plugin` and `plugin_opts` in Shadowsocks JSON
     "fast_open":true,
     "reuse_port":true,
     "no_delay":true,
-    "plugin":"path-to-binary"
+    "plugin":"path-to-gqserver-binary"
     "plugin_opts":"path-to-gqserver.json" (if used as a server)
 }`
 
