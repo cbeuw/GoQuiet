@@ -30,7 +30,22 @@ For client:
 
 `ss-local -c <path-to-ss-config> --plugin <path-to-gq-client-binary> --plugin-opts "<path-to-gqclient.json>"`
 
-Or if you are using Shadowsocks client Windows GUI, put the `<path-to-gq-client.exe>` in Plugin field and `<path-to-gqclient.json>` in Plugin Options field
+or as value of `plugin` and `plugin_opts` in Shadowsocks JSON
+
+`{
+    "server":"0.0.0.0",
+    "server_port":443,
+    "local_address": "127.0.0.1",
+    "local_port":1080,
+    "password":"mypassword",
+    "timeout":300,
+    "method":"aes-128-gcm",
+    "fast_open":true,
+    "reuse_port":true,
+    "no_delay":true,
+    "plugin":"path-to-binary"
+    "plugin_opts":"path-to-gqserver.json" (if used as a server)
+}`
 
 ### Standalone mode
 
@@ -105,7 +120,7 @@ If you want to run a functional web server on your proxy machine, you need it to
 
 Or you can set the `WebServerAddr` field in the server config file as an external IP, and set the `ServerName` field in the client config file as the domain name of that ip. Because of the [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication) extension in the `ClientHello` message, the firewall knows the domain name someone is trying to access. If the firewall sends a `ClientHello` message to our proxy server with an SNI we used, the destination IP specified in `WebServerAddr` will receive this `ClientHello` message and the web server on that machine will check the SNI entry against its configuration. If they don't match, the web server will refuse to connect and show an error message, which could expose the fact that our proxy machine is not running a normal TLS web server. If you match the external IP with its domain name (e.g. `204.79.197.200` to `www.bing.com`), our proxy server will become, effectively to the observer, a server owned by that domain.
 
-## Summary of Instructions for Windows Client Users
+## Instructions for Windows Client Users
 
 [Video guide](https://www.youtube.com/watch?v=V9clEjav6zY)
 
