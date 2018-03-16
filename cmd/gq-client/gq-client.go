@@ -132,19 +132,19 @@ func main() {
 	var remoteHost string
 	// The proxy port,should be 443
 	var remotePort string
-	var configPath string
+	var pluginOpts string
 	if os.Getenv("SS_LOCAL_HOST") != "" {
 		localHost = os.Getenv("SS_LOCAL_HOST")
 		localPort = os.Getenv("SS_LOCAL_PORT")
 		remoteHost = os.Getenv("SS_REMOTE_HOST")
 		remotePort = os.Getenv("SS_REMOTE_PORT")
-		configPath = os.Getenv("SS_PLUGIN_OPTIONS")
+		pluginOpts = os.Getenv("SS_PLUGIN_OPTIONS")
 	} else {
 		localHost = "127.0.0.1"
 		flag.StringVar(&localPort, "l", "", "localPort: same as server_port in ss config, the plugin listens to SS using this")
 		flag.StringVar(&remoteHost, "s", "", "remoteHost: IP of your proxy server")
 		flag.StringVar(&remotePort, "p", "443", "remotePort: proxy port, should be 443")
-		flag.StringVar(&configPath, "c", "gqclient.json", "configPath: path to gqclient.json")
+		flag.StringVar(&pluginOpts, "c", "gqclient.json", "configPath: path to gqclient.json")
 		flag.Parse()
 		if localPort == "" {
 			log.Fatal("Must specify localPort")
@@ -163,7 +163,7 @@ func main() {
 		Now:            time.Now,
 		Opaque:         opaque,
 	}
-	err := sta.ParseConfig(configPath)
+	err := sta.ParseConfig(pluginOpts)
 	if err != nil {
 		log.Fatal(err)
 	}

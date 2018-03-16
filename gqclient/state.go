@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"io/ioutil"
+	"strings"
 	"time"
 )
 
@@ -27,11 +28,40 @@ type State struct {
 	Browser        string
 }
 
-// ParseConfig parses the config file into a State variable
-func (sta *State) ParseConfig(configPath string) error {
-	content, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		return err
+// semi-colon separated value. This is for Android plugin options
+func ssvToJson(ssv string) (ret []byte) {
+	lines := strings.Split(ssv, ";")
+	ret = []byte("{")
+	for _, ln := range lines {
+		if ln == "" {
+			break
+		}
+		sp := strings.Split(ln, "=")
+		key := sp[0]
+		value := sp[1]
+		// JSON doesn't like quotation marks around int
+		// Yes this is extremely ugly but it's still better than writing a tokeniser
+		if key == "TicketTimeHint" {
+			ret = append(ret, []byte("\""+key+"\":"+value+",")...)
+		} else {
+			ret = append(ret, []byte("\""+key+"\":\""+value+"\",")...)
+		}
+	}
+	ret = ret[:len(ret)-1] // remove the last comma
+	ret = append(ret, '}')
+	return ret
+}
+
+// ParseConfig parses the config (either a path to json or Android config) into a State variable
+func (sta *State) ParseConfig(config string) (err error) {
+	var content []byte
+	if strings.Contains(config, ";") && strings.Contains(config, "=") {
+		content = ssvToJson(config)
+	} else {
+		content, err = ioutil.ReadFile(config)
+		if err != nil {
+			return err
+		}
 	}
 	err = json.Unmarshal(content, &sta)
 	if err != nil {
