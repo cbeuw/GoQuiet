@@ -118,6 +118,8 @@ The `random` field should be unique in each `ClientHello`. To check its uniquene
 ### Notes on the web server
 If you want to run a functional web server on your proxy machine, you need it to have a domain and a valid certificate. As for the domain, you can either register one at some cost, or use a DDNS service like noip for free. The certificate can be obtained from [Let's Encrypt](https://letsencrypt.org/) for free. **The certificate is for your web server (e.g. Apache and Nginx) only. The GoQuiet plugin does not need a certificate.**
 
+https://dcamero.azurewebsites.net/shadowsocks-goquiet.html - Detailed guide about "How to make your traffic look like simple tls traffic"
+
 Or you can set the `WebServerAddr` field in the server config file as an external IP, and set the `ServerName` field in the client config file as the domain name of that ip. Because of the [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication) extension in the `ClientHello` message, the firewall knows the domain name someone is trying to access. If the firewall sends a `ClientHello` message to our proxy server with an SNI we used, the destination IP specified in `WebServerAddr` will receive this `ClientHello` message and the web server on that machine will check the SNI entry against its configuration. If they don't match, the web server will refuse to connect and show an error message, which could expose the fact that our proxy machine is not running a normal TLS web server. If you match the external IP with its domain name (e.g. `204.79.197.200` to `www.bing.com`), our proxy server will become, effectively to the observer, a server owned by that domain.
 
 ## Instructions for Windows Client Users
