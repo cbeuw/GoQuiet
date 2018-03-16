@@ -41,11 +41,11 @@ or as value of `plugin` and `plugin_opts` in Shadowsocks JSON
     "password":"mypassword",
     "timeout":300,
     "method":"aes-128-gcm",
-    "fast_open":true,
+    "fast_open":false,
     "reuse_port":true,
     "no_delay":true,
-    "plugin":"path-to-gqserver/client-binary"
-    "plugin_opts":"path-to-gqserver/client.json"
+    "plugin":"path-to-gqserver/client-binary",
+    "plugin_opts":"path-to-gqserver/client.json"
 }
 ```
 
