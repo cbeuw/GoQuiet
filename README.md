@@ -32,7 +32,8 @@ For client:
 
 or as value of `plugin` and `plugin_opts` in Shadowsocks JSON
 
-`{
+```json
+{
     "server":"0.0.0.0",
     "server_port":443,
     "local_address": "127.0.0.1",
@@ -43,9 +44,10 @@ or as value of `plugin` and `plugin_opts` in Shadowsocks JSON
     "fast_open":true,
     "reuse_port":true,
     "no_delay":true,
-    "plugin":"path-to-gqserver-binary"
-    "plugin_opts":"path-to-gqserver.json" (if used as a server)
-}`
+    "plugin":"path-to-gqserver/client-binary"
+    "plugin_opts":"path-to-gqserver/client.json"
+}
+```
 
 ### Standalone mode
 
