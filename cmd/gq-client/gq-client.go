@@ -78,8 +78,11 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 	data = data[:i]
 
 	var remoteConn net.Conn
-	for trial := 0; err == nil && trial < 3; trial++ {
+	for trial := 0; trial < 3; trial++ {
 		remoteConn, err = net.Dial("tcp", sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT)
+		if err == nil {
+			break
+		}
 	}
 	if remoteConn == nil {
 		log.Println("Failed to connect to the proxy server")
