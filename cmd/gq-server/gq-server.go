@@ -39,9 +39,12 @@ func (pair *ssPair) closePipe() {
 }
 
 func (pair *webPair) serverToRemote() {
-	_, err := io.Copy(pair.remote, pair.webServer)
-	if err != nil {
-		pair.closePipe()
+	for {
+		length, err := io.Copy(pair.remote, pair.webServer)
+		if err != nil || length == 0 {
+			pair.closePipe()
+			return
+		}
 	}
 }
 
