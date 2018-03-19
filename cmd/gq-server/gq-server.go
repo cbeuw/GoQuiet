@@ -140,7 +140,7 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	for c := 0; c < 2; c++ {
 		_, err = gqserver.ReadTillDrain(conn)
 		if err != nil {
-			log.Printf("Reading discarded message: %v\n", err)
+			log.Printf("Reading discarded message %v: %v\n", c, err)
 			go conn.Close()
 			return
 		}
