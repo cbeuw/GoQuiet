@@ -1,3 +1,4 @@
 *.swp
 release/*
 *.sh
+*.DS_Store
