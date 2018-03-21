@@ -2,15 +2,18 @@ package main
 
 /*
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <sys/uio.h>
 
 #define ANCIL_FD_BUFFER(n) \
     struct { \
-	struct cmsghdr h; \
-	int fd[n]; \
+        struct cmsghdr h; \
+        int fd[n]; \
     }
 
 int
@@ -21,6 +24,7 @@ ancil_send_fds_with_buffer(int sock, const int *fds, unsigned n_fds, void *buffe
     struct iovec nothing_ptr;
     struct cmsghdr *cmsg;
     int i;
+
     nothing_ptr.iov_base = &nothing;
     nothing_ptr.iov_len = 1;
     msghdr.msg_name = NULL;
@@ -35,7 +39,7 @@ ancil_send_fds_with_buffer(int sock, const int *fds, unsigned n_fds, void *buffe
     cmsg->cmsg_level = SOL_SOCKET;
     cmsg->cmsg_type = SCM_RIGHTS;
     for(i = 0; i < n_fds; i++)
-	((int *)CMSG_DATA(cmsg))[i] = fds[i];
+        ((int *)CMSG_DATA(cmsg))[i] = fds[i];
     return(sendmsg(sock, &msghdr, 0) >= 0 ? 0 : -1);
 }
 
@@ -43,6 +47,7 @@ int
 ancil_send_fd(int sock, int fd)
 {
     ANCIL_FD_BUFFER(1) buffer;
+
     return(ancil_send_fds_with_buffer(sock, &fd, 1, &buffer));
 }
 
@@ -50,7 +55,7 @@ void
 set_timeout(int sock)
 {
     struct timeval tv;
-    tv.tv_sec  = 1;
+    tv.tv_sec  = 3;
     tv.tv_usec = 0;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval));
     setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
@@ -67,6 +72,7 @@ import (
 	"net"
 	"os"
 	"time"
+	"syscall"
 )
 
 // ss refers to the ss-client, remote refers to the proxy server
