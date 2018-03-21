@@ -194,7 +194,7 @@ func main() {
 	// The proxy port,should be 443
 	var remotePort string
 	var pluginOpts string
-	var isVpn bool = false
+	var protectBase string
 	log_init()
 	if os.Getenv("SS_LOCAL_HOST") != "" {
 		localHost = os.Getenv("SS_LOCAL_HOST")
@@ -208,7 +208,7 @@ func main() {
 		flag.StringVar(&remoteHost, "s", "", "remoteHost: IP of your proxy server")
 		flag.StringVar(&remotePort, "p", "443", "remotePort: proxy port, should be 443")
 		flag.StringVar(&pluginOpts, "c", "gqclient.json", "configPath: path to gqclient.json")
-		flag.BoolVar(&isVpn, "V", false, "isVpn: using Android VPN mode")
+		flag.StringVar(&protectBase, "P", "", "protectBase: Android working directory")
 		flag.Parse()
 		if localPort == "" {
 			log.Fatal("Must specify localPort")
@@ -218,9 +218,9 @@ func main() {
 		}
 		log.Printf("Starting standalone mode. Listening for ss on %v:%v\n", localHost, localPort)
 	}
-	if isVpn {
+	if protectBase != "" {
 
-		path := "protect_path"
+		path := protectBase + "/protect_path"
 
 		callback := func(fd int, sotype int) {
 			socket, err := syscall.Socket(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
