@@ -225,6 +225,7 @@ func main() {
 		log.Printf("Starting standalone mode. Listening for ss on %v:%v\n", localHost, localPort)
 	}
 	if protectBase != "" {
+		log.Println("Using Android VPN mode.")
 
 		path := protectBase + "/protect_path"
 
