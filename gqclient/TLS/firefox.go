@@ -3,7 +3,7 @@ package TLS
 
 import (
 	"encoding/hex"
-	"github.com/cbeuw/GoQuiet/gqclient"
+	"github.com/linusyang92/GoQuiet/gqclient"
 )
 
 type firefox struct {

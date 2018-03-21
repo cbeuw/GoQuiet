@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/cbeuw/GoQuiet/gqclient"
-	"github.com/cbeuw/GoQuiet/gqclient/TLS"
+	"github.com/linusyang92/GoQuiet/gqclient"
+	"github.com/linusyang92/GoQuiet/gqclient/TLS"
 	"io"
 	"log"
 	"net"

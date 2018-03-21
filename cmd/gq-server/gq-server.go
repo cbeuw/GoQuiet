@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"flag"
-	"github.com/cbeuw/GoQuiet/gqserver"
+	"github.com/linusyang92/GoQuiet/gqserver"
 	"io"
 	"log"
 	"net"
