@@ -2,7 +2,7 @@ package TLS
 
 import (
 	"encoding/binary"
-	"github.com/linusyang92/GoQuiet/gqclient"
+	"github.com/cbeuw/GoQuiet/gqclient"
 	"io"
 	"net"
 	"time"

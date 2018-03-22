@@ -65,14 +65,14 @@ import "C"
 
 import (
 	"flag"
-	"github.com/linusyang92/GoQuiet/gqclient"
-	"github.com/linusyang92/GoQuiet/gqclient/TLS"
+	"github.com/cbeuw/GoQuiet/gqclient"
+	"github.com/cbeuw/GoQuiet/gqclient/TLS"
 	"io"
 	"log"
 	"net"
 	"os"
-	"time"
 	"syscall"
+	"time"
 )
 
 // ss refers to the ss-client, remote refers to the proxy server

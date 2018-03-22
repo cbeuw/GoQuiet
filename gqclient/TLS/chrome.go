@@ -4,7 +4,7 @@ package TLS
 
 import (
 	"encoding/hex"
-	"github.com/linusyang92/GoQuiet/gqclient"
+	"github.com/cbeuw/GoQuiet/gqclient"
 	"math/rand"
 	"time"
 )
