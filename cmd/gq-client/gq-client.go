@@ -67,6 +67,7 @@ import (
 	"flag"
 	"github.com/cbeuw/GoQuiet/gqclient"
 	"github.com/cbeuw/GoQuiet/gqclient/TLS"
+	"github.com/cbeuw/gotfo"
 	"io"
 	"log"
 	"net"
@@ -142,22 +143,26 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 	data = data[:i]
 
 	var remoteConn net.Conn
-	for trial := 0; trial < 3; trial++ {
-		remoteConn, err = net.Dial("tcp", sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT)
-		if err == nil {
-			break
+	clientHello := TLS.ComposeInitHandshake(sta)
+	if sta.FastOpen {
+		remoteConn, err = gotfo.Dial(sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT, true, clientHello)
+		if err != nil {
+			log.Printf("Connecting and sending ClientHello to remote: %v\n", err)
+			return
+		}
+	} else {
+		remoteConn, err = gotfo.Dial(sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT, false, nil)
+		if err != nil {
+			log.Printf("Connecting to remote: %v\n", err)
+			return
+		}
+		_, err = remoteConn.Write(clientHello)
+		if err != nil {
+			log.Printf("Sending ClientHello: %v\n", err)
+			return
 		}
 	}
-	if remoteConn == nil {
-		log.Println("Failed to connect to the proxy server")
-		return
-	}
-	clientHello := TLS.ComposeInitHandshake(sta)
-	_, err = remoteConn.Write(clientHello)
-	if err != nil {
-		log.Printf("Sending ClientHello to remote: %v\n", err)
-		return
-	}
+
 	// Three discarded messages: ServerHello, ChangeCipherSpec and Finished
 	for c := 0; c < 3; c++ {
 		_, err = TLS.ReadTillDrain(remoteConn)
@@ -166,6 +171,7 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 			return
 		}
 	}
+
 	reply := TLS.ComposeReply()
 	_, err = remoteConn.Write(reply)
 	if err != nil {
@@ -201,7 +207,10 @@ func main() {
 	var remotePort string
 	var pluginOpts string
 	var protectBase string
+
+	// For Android
 	log_init()
+
 	if os.Getenv("SS_LOCAL_HOST") != "" {
 		localHost = os.Getenv("SS_LOCAL_HOST")
 		localPort = os.Getenv("SS_LOCAL_PORT")
@@ -224,6 +233,8 @@ func main() {
 		}
 		log.Printf("Starting standalone mode. Listening for ss on %v:%v\n", localHost, localPort)
 	}
+
+	// For Android
 	if protectBase != "" {
 		log.Println("Using Android VPN mode.")
 
@@ -259,7 +270,7 @@ func main() {
 			}
 		}
 
-		SetNetCallback(callback)
+		gotfo.SetFdCallback(callback)
 	}
 
 	opaque := gqclient.BtoInt(gqclient.CryptoRandBytes(32))
@@ -276,7 +287,7 @@ func main() {
 		log.Fatal(err)
 	}
 	sta.SetAESKey()
-	listener, err := net.Listen("tcp", sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT)
+	listener, err := gotfo.Listen(sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT, sta.FastOpen)
 	if err != nil {
 		log.Fatal(err)
 	}
