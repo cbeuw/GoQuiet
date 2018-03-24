@@ -25,6 +25,7 @@ type State struct {
 	SS_LOCAL_PORT  string
 	SS_REMOTE_HOST string
 	SS_REMOTE_PORT string
+	FastOpen       bool
 	M              sync.RWMutex
 	UsedRandom     map[[32]byte]int
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"github.com/cbeuw/GoQuiet/gqserver"
+	"github.com/cbeuw/gotfo"
 	"io"
 	"log"
 	"net"
@@ -104,8 +105,8 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		go pair.remoteToServer()
 		go pair.serverToRemote()
 	}
-	goSS := func() {
-		pair, err := makeSSPipe(conn, sta)
+	goSS := func(data []byte) {
+		pair, err := makeSSPipe(conn, sta, data)
 		if err != nil {
 			log.Fatalf("Making connection to ss-server: %v\n", err)
 		}
@@ -148,7 +149,14 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 			return
 		}
 	}
-	goSS()
+
+	if sta.FastOpen {
+		data, _ = gqserver.ReadTillDrain(conn)
+		data = gqserver.PeelRecordLayer(data)
+		goSS(data)
+	} else {
+		goSS(nil)
+	}
 }
 
 func makeWebPipe(remote net.Conn, sta *gqserver.State) (*webPair, error) {
@@ -163,8 +171,8 @@ func makeWebPipe(remote net.Conn, sta *gqserver.State) (*webPair, error) {
 	return pair, nil
 }
 
-func makeSSPipe(remote net.Conn, sta *gqserver.State) (*ssPair, error) {
-	conn, err := net.Dial("tcp", sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT)
+func makeSSPipe(remote net.Conn, sta *gqserver.State, data []byte) (*ssPair, error) {
+	conn, err := gotfo.Dial(sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT, sta.FastOpen, data)
 	if err != nil {
 		return &ssPair{}, errors.New("Connection to SS server failed")
 	}
@@ -230,7 +238,7 @@ func main() {
 	}
 	sta.SetAESKey()
 	go usedRandomCleaner(sta)
-	listener, err := net.Listen("tcp", sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT)
+	listener, err := gotfo.Listen(sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT, sta.FastOpen)
 	log.Println("Listening on " + sta.SS_REMOTE_HOST + ":" + sta.SS_REMOTE_PORT)
 	if err != nil {
 		log.Fatal(err)
