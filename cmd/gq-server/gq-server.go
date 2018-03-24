@@ -238,18 +238,37 @@ func main() {
 	}
 	sta.SetAESKey()
 	go usedRandomCleaner(sta)
-	listener, err := gotfo.Listen(sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT, sta.FastOpen)
-	log.Println("Listening on " + sta.SS_REMOTE_HOST + ":" + sta.SS_REMOTE_PORT)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for {
-		conn, err := listener.Accept()
+
+	listen := func(addr, port string) {
+		listener, err := gotfo.Listen(addr+":"+port, sta.FastOpen)
+		log.Println("Listening on " + addr + ":" + port)
 		if err != nil {
-			log.Printf("%v", err)
-			continue
+			log.Fatal(err)
 		}
-		go dispatchConnection(conn, sta)
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				log.Printf("%v", err)
+				continue
+			}
+			go dispatchConnection(conn, sta)
+		}
+	}
+
+	// When listening on an IPv6 and IPv4, SS gives REMOTE_HOST as e.g. ::|0.0.0.0
+	listeningIP := strings.Split(sta.SS_REMOTE_HOST, "|")
+	for i, ip := range listeningIP {
+		if net.ParseIP(ip).To4() == nil {
+			// IPv6 needs square brackets
+			ip = "[" + ip + "]"
+		}
+
+		// The last listener must block main() because the program exits on main return.
+		if i == len(listeningIP)-1 {
+			listen(ip, sta.SS_REMOTE_PORT)
+		} else {
+			go listen(ip, sta.SS_REMOTE_PORT)
+		}
 	}
 
 }
