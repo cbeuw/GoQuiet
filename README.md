@@ -20,6 +20,8 @@ Or use `make client` or `make server` to build it yourself
 
 **Change the key in config file before using it. It can be the same as shadowsocks' password**
 
+You can check [Instructions for Windows users](https://github.com/cbeuw/GoQuiet/wiki/Instructions-for-Windows-Client-Users)
+
 ### Plugin mode
 
 For server:
@@ -41,7 +43,7 @@ or as value of `plugin` and `plugin_opts` in Shadowsocks JSON
     "password":"mypassword",
     "timeout":300,
     "method":"aes-128-gcm",
-    "fast_open":false,
+    "fast_open":true,
     "reuse_port":true,
     "no_delay":true,
     "plugin":"path-to-gqserver/client-binary",
@@ -72,6 +74,8 @@ For server:
 
 `Key` is the key. This needs to be the same as the `Key` set in `gqclient.json`
 
+`FastOpen` is used to enable or disable TCP fast open.
+
 For client:
 
 `ServerName` is the domain you want to make the GFW think you are visiting
@@ -82,6 +86,7 @@ For client:
 
 `Browser` is the browser you want to **make the GFW _think_ you are using, it has NOTHING to do with the web browser or any web application you are using on your machine**. Currently support `chrome` and `firefox`.
 
+`FastOpen` is used to enable or disable TCP fast open.
 
 ## How it works
 As mentioned above, this plugin obfuscates shadowsocks' traffic as TLS traffic. This includes adding TLS Record Layer header to application data and simulating TLS handshake. Both of these are trivial to implement, but by manipulating data trasmitted in the handshake sequence, we can achieve some interesting things.
@@ -123,21 +128,3 @@ If you want to run a functional web server on your proxy machine, you need it to
 https://dcamero.azurewebsites.net/shadowsocks-goquiet.html - Detailed guide about "How to make your traffic look like simple tls traffic"
 
 Or you can set the `WebServerAddr` field in the server config file as an external IP, and set the `ServerName` field in the client config file as the domain name of that ip. Because of the [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication) extension in the `ClientHello` message, the firewall knows the domain name someone is trying to access. If the firewall sends a `ClientHello` message to our proxy server with an SNI we used, the destination IP specified in `WebServerAddr` will receive this `ClientHello` message and the web server on that machine will check the SNI entry against its configuration. If they don't match, the web server will refuse to connect and show an error message, which could expose the fact that our proxy machine is not running a normal TLS web server. If you match the external IP with its domain name (e.g. `204.79.197.200` to `www.bing.com`), our proxy server will become, effectively to the observer, a server owned by that domain.
-
-## Instructions for Windows Client Users
-
-[Video guide](https://www.youtube.com/watch?v=V9clEjav6zY)
-
-1. Download and unzip the latest release of the [Shadowsocks Windows client](https://github.com/shadowsocks/shadowsocks-windows/releases/).
-
-2. Download the latest release of the [GoQuiet Client for Windows exe](https://github.com/cbeuw/GoQuiet/releases/), and place it in same the folder as your Shadowsocks exe.
-
-3. Create a file `gqclient.json` whose content matches with those on the server.
-
-![Example of gqclient.json file](https://user-images.githubusercontent.com/7034308/37244688-b65501ce-2484-11e8-9a26-7e8fe6d95d05.png)
-
-4. Start Shadowsocks, and fill in the parameters matching your Shadowsocks server, your GoQuiet client plugin exe, and your GoQuiet plugin `gqclient.json` file.
-
-![Example of Shadowsocks configuration on client](https://user-images.githubusercontent.com/7034308/37244707-ef1cf3ae-2484-11e8-9493-bbfd6084da8d.png)
-
-5. Configure your system or browser proxy settings to 127.0.0.1 port 1080.
