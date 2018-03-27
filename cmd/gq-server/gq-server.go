@@ -76,8 +76,8 @@ func (pair *ssPair) remoteToServer() {
 }
 
 func (pair *ssPair) serverToRemote() {
+	buf := make([]byte, 10240)
 	for {
-		buf := make([]byte, 10240)
 		i, err := io.ReadAtLeast(pair.ss, buf, 1)
 		if err != nil {
 			pair.closePipe()

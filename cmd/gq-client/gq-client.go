@@ -47,8 +47,8 @@ func (p *pair) remoteToSS() {
 }
 
 func (p *pair) ssToRemote() {
+	buf := make([]byte, 10240)
 	for {
-		buf := make([]byte, 10240)
 		i, err := io.ReadAtLeast(p.ss, buf, 1)
 		if err != nil {
 			p.closePipe()
