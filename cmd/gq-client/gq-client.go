@@ -160,12 +160,6 @@ func main() {
 		flag.StringVar(&remotePort, "p", "443", "remotePort: proxy port, should be 443")
 		flag.StringVar(&pluginOpts, "c", "gqclient.json", "configPath: path to gqclient.json")
 		flag.Parse()
-		if localPort == "" {
-			log.Fatal("Must specify localPort")
-		}
-		if remoteHost == "" {
-			log.Fatal("Must specify remoteHost")
-		}
 		log.Printf("Starting standalone mode. Listening for ss on %v:%v\n", localHost, localPort)
 	}
 
@@ -182,6 +176,20 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if sta.SS_LOCAL_PORT == "" {
+		log.Fatal("Must specify localPort")
+	}
+	if sta.SS_REMOTE_HOST == "" {
+		log.Fatal("Must specify remoteHost")
+	}
+	if sta.Key == "" {
+		log.Fatal("Key cannot be empty")
+	}
+	if sta.TicketTimeHint == 0 {
+		log.Fatal("TicketTimeHint cannot be empty or 0")
+	}
+
 	sta.SetAESKey()
 	listener, err := gotfo.Listen(sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT, sta.FastOpen)
 	if err != nil {

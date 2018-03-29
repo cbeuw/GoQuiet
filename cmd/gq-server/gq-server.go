@@ -236,6 +236,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Configuration file error: %v", err)
 	}
+
+	if sta.Key == "" {
+		log.Fatal("Key cannot be empty")
+	}
+
 	sta.SetAESKey()
 	go usedRandomCleaner(sta)
 
