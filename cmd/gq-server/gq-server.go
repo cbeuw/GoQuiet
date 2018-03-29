@@ -195,6 +195,8 @@ func usedRandomCleaner(sta *gqserver.State) {
 	}
 }
 
+var version string
+
 func main() {
 	// Should be 127.0.0.1 to listen to ss-server on this machine
 	var localHost string
@@ -216,7 +218,14 @@ func main() {
 		flag.StringVar(&remoteHost, "s", "0.0.0.0", "remoteHost: outbound listing ip, set to 0.0.0.0 to listen to everything")
 		flag.StringVar(&remotePort, "p", "443", "remotePort: outbound listing port, should be 443")
 		flag.StringVar(&configPath, "c", "gqserver.json", "configPath: path to gqserver.json")
+		askVersion := flag.Bool("v", false, "Print the version number")
 		flag.Parse()
+
+		if *askVersion {
+			log.Println("gq-server verison: " + version)
+			return
+		}
+
 		if *localAddr == "" {
 			log.Fatal("Must specify localAddr")
 		}

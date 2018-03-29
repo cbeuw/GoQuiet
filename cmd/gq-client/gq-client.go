@@ -132,6 +132,8 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 
 }
 
+var version string
+
 func main() {
 	// Should be 127.0.0.1 to listen to ss-local on this machine
 	var localHost string
@@ -159,7 +161,14 @@ func main() {
 		flag.StringVar(&remoteHost, "s", "", "remoteHost: IP of your proxy server")
 		flag.StringVar(&remotePort, "p", "443", "remotePort: proxy port, should be 443")
 		flag.StringVar(&pluginOpts, "c", "gqclient.json", "configPath: path to gqclient.json")
+		askVersion := flag.Bool("v", false, "Print the version number")
 		flag.Parse()
+
+		if *askVersion {
+			log.Println("gq-client version: " + version)
+			return
+		}
+
 		log.Printf("Starting standalone mode. Listening for ss on %v:%v\n", localHost, localPort)
 	}
 
