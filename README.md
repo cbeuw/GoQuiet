@@ -17,6 +17,7 @@ This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses ab
 ## Build
 
 **Build with go1.8 or 1.9 only: https://github.com/cbeuw/GoQuiet/issues/26**
+
 `make client` or `make server`
 
 ## Usage
