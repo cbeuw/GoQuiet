@@ -14,7 +14,10 @@ This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses ab
 
 **Download the binaries [here](https://github.com/cbeuw/GoQuiet/releases)**
 
-Or use `make client` or `make server` to build it yourself
+## Build
+
+**Build with go1.8 or 1.9 only: https://github.com/cbeuw/GoQuiet/issues/26**
+`make client` or `make server`
 
 ## Usage
 

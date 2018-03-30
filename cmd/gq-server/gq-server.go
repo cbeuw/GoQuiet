@@ -1,3 +1,5 @@
+// +build go1.8,!go1.10
+
 package main
 
 import (
