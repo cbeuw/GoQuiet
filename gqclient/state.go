@@ -45,7 +45,7 @@ func ssvToJson(ssv string) (ret []byte) {
 		}
 		sp := strings.Split(ln, "=")
 		key := sp[0]
-		value := sp[1]
+		value := strings.Join(sp[1:], "=")
 		// JSON doesn't like quotation marks around int and boolean
 		// Yes this is extremely ugly but it's still better than writing a tokeniser
 		if key == "TicketTimeHint" || key == "FastOpen" {
