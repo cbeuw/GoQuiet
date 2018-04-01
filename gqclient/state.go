@@ -43,7 +43,7 @@ func ssvToJson(ssv string) (ret []byte) {
 		if ln == "" {
 			break
 		}
-		sp := strings.Split(ln, "=")
+		sp := strings.SplitN(ln, "=", 2)
 		key := sp[0]
 		value := sp[1]
 		// JSON doesn't like quotation marks around int and boolean
