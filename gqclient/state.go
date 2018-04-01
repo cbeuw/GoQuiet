@@ -31,7 +31,13 @@ type State struct {
 
 // semi-colon separated value. This is for Android plugin options
 func ssvToJson(ssv string) (ret []byte) {
-	lines := strings.Split(ssv, ";")
+	unescape := func(s string) string {
+		r := strings.Replace(s, "\\\\", "\\", -1)
+		r = strings.Replace(r, "\\=", "=", -1)
+		r = strings.Replace(r, "\\;", ";", -1)
+		return r
+	}
+	lines := strings.Split(unescape(ssv), ";")
 	ret = []byte("{")
 	for _, ln := range lines {
 		if ln == "" {

@@ -1,4 +1,10 @@
 *.swp
-release/*
 *.sh
 *.DS_Store
+
+/release
+/build
+
+# vscode
+/.vscode
+/cmd/gq-*/debug
