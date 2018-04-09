@@ -5,14 +5,15 @@ package main
 import (
 	"errors"
 	"flag"
-	"github.com/cbeuw/GoQuiet/gqserver"
-	"github.com/cbeuw/gotfo"
 	"io"
 	"log"
 	"net"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/cbeuw/GoQuiet/gqserver"
+	"github.com/cbeuw/gotfo"
 )
 
 type pipe interface {
@@ -221,10 +222,16 @@ func main() {
 		flag.StringVar(&remotePort, "p", "443", "remotePort: outbound listing port, should be 443")
 		flag.StringVar(&configPath, "c", "gqserver.json", "configPath: path to gqserver.json")
 		askVersion := flag.Bool("v", false, "Print the version number")
+		printUsage := flag.Bool("h", false, "Print this message")
 		flag.Parse()
 
 		if *askVersion {
 			log.Println("gq-server verison: " + version)
+			return
+		}
+
+		if *printUsage {
+			flag.Usage()
 			return
 		}
 
