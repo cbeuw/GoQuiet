@@ -3,41 +3,8 @@ package TLS
 import (
 	"encoding/binary"
 	"github.com/cbeuw/GoQuiet/gqclient"
-	"io"
-	"net"
 	"time"
 )
-
-// ReadTillDrain reads TLS data according to its record layer
-func ReadTillDrain(conn net.Conn) (ret []byte, err error) {
-	// TCP is a stream. Multiple TLS messages can arrive at the same time,
-	// a single message can also be segmented due to MTU of the IP layer.
-	// This function guareentees a single TLS message to be read and everything
-	// else is left in the buffer.
-	record := make([]byte, 5)
-	i, err := io.ReadFull(conn, record)
-	if err != nil {
-		return
-	}
-	ret = record
-	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
-	left := gqclient.BtoInt(record[3:5])
-	for left != 0 {
-		// If left > buffer size (i.e. our message got segmented), the entire MTU is read
-		// if left = buffer size, the entire buffer is all there left to read
-		// if left < buffer size (i.e. multiple messages came together),
-		// only the message we want is read
-		buf := make([]byte, left)
-		i, err = io.ReadFull(conn, buf)
-		if err != nil {
-			return
-		}
-		left -= i
-		ret = append(ret, buf[:i]...)
-	}
-	conn.SetReadDeadline(time.Time{})
-	return
-}
 
 // AddRecordLayer adds record layer to data
 func AddRecordLayer(input []byte, typ []byte, ver []byte) []byte {

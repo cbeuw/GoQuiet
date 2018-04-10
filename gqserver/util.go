@@ -1,6 +1,11 @@
 package gqserver
 
-import prand "math/rand"
+import (
+	"io"
+	prand "math/rand"
+	"net"
+	"time"
+)
 
 // BtoInt converts a byte slice into int in Big Endian order
 // Uint methods from binary package can be used, but they are messy
@@ -22,5 +27,40 @@ func PsudoRandBytes(length int, seed int64) (ret []byte) {
 		randByte := byte(prand.Intn(256))
 		ret = append(ret, randByte)
 	}
+	return
+}
+
+// ReadTillDrain reads TLS data according to its record layer
+func ReadTillDrain(conn net.Conn, buffer []byte) (n int, err error) {
+	// TCP is a stream. Multiple TLS messages can arrive at the same time,
+	// a single message can also be segmented due to MTU of the IP layer.
+	// This function guareentees a single TLS message to be read and everything
+	// else is left in the buffer.
+	i, err := io.ReadFull(conn, buffer[:5])
+	if err != nil {
+		return
+	}
+
+	dataLength := BtoInt(buffer[3:5])
+	left := dataLength
+	readPtr := 5
+
+	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	for left != 0 {
+		// If left > buffer size (i.e. our message got segmented), the entire MTU is read
+		// if left = buffer size, the entire buffer is all there left to read
+		// if left < buffer size (i.e. multiple messages came together),
+		// only the message we want is read
+		i, err = io.ReadFull(conn, buffer[readPtr:readPtr+left])
+		if err != nil {
+			return
+		}
+		left -= i
+		readPtr += i
+	}
+	conn.SetReadDeadline(time.Time{})
+
+	n = 5 + dataLength
+	buffer = buffer[:n]
 	return
 }

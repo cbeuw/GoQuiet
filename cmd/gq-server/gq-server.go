@@ -63,13 +63,14 @@ func (pair *webPair) remoteToServer() {
 }
 
 func (pair *ssPair) remoteToServer() {
+	buf := make([]byte, 20480)
 	for {
-		data, err := gqserver.ReadTillDrain(pair.remote)
+		i, err := gqserver.ReadTillDrain(pair.remote, buf)
 		if err != nil {
 			pair.closePipe()
 			return
 		}
-		data = gqserver.PeelRecordLayer(data)
+		data := gqserver.PeelRecordLayer(buf[:i])
 		_, err = pair.ss.Write(data)
 		if err != nil {
 			pair.closePipe()
@@ -116,7 +117,9 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		go pair.remoteToServer()
 		go pair.serverToRemote()
 	}
+
 	buf := make([]byte, 1500)
+
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	i, err := io.ReadAtLeast(conn, buf, 1)
 	if err != nil {
@@ -130,12 +133,14 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		goWeb(data)
 		return
 	}
+
 	isSS := gqserver.IsSS(ch, sta)
 	if !isSS {
 		log.Printf("+1 non SS traffic from %v\n", conn.RemoteAddr())
 		goWeb(data)
 		return
 	}
+
 	reply := gqserver.ComposeReply(ch)
 	_, err = conn.Write(reply)
 	if err != nil {
@@ -143,9 +148,11 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		go conn.Close()
 		return
 	}
+
 	// Two discarded messages: ChangeCipherSpec and Finished
+	discardBuf := make([]byte, 1024)
 	for c := 0; c < 2; c++ {
-		_, err = gqserver.ReadTillDrain(conn)
+		_, err = gqserver.ReadTillDrain(conn, discardBuf)
 		if err != nil {
 			log.Printf("Reading discarded message %v: %v\n", c, err)
 			go conn.Close()
@@ -153,9 +160,11 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		}
 	}
 
+	// If FastOpen is enabled, we need some data ready to send to ss-server
 	if sta.FastOpen {
-		data, _ = gqserver.ReadTillDrain(conn)
-		data = gqserver.PeelRecordLayer(data)
+		tempBuf := make([]byte, 20480)
+		i, _ = gqserver.ReadTillDrain(conn, tempBuf)
+		data = gqserver.PeelRecordLayer(tempBuf[:i])
 		goSS(data)
 	} else {
 		goSS(nil)

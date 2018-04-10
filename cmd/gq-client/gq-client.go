@@ -34,13 +34,14 @@ func (p *pair) closePipe() {
 }
 
 func (p *pair) remoteToSS() {
+	buf := make([]byte, 20480)
 	for {
-		data, err := TLS.ReadTillDrain(p.remote)
+		i, err := gqclient.ReadTillDrain(p.remote, buf)
 		if err != nil {
 			p.closePipe()
 			return
 		}
-		data = TLS.PeelRecordLayer(data)
+		data := TLS.PeelRecordLayer(buf[:i])
 		_, err = p.ss.Write(data)
 		if err != nil {
 			p.closePipe()
@@ -103,8 +104,9 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 	}
 
 	// Three discarded messages: ServerHello, ChangeCipherSpec and Finished
+	discardBuf := make([]byte, 1024)
 	for c := 0; c < 3; c++ {
-		_, err = TLS.ReadTillDrain(remoteConn)
+		_, err = gqclient.ReadTillDrain(remoteConn, discardBuf)
 		if err != nil {
 			log.Printf("Reading discarded message %v: %v\n", c, err)
 			return
