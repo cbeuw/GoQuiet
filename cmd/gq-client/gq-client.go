@@ -4,15 +4,16 @@ package main
 
 import (
 	"flag"
-	"github.com/cbeuw/GoQuiet/gqclient"
-	"github.com/cbeuw/GoQuiet/gqclient/TLS"
-	"github.com/cbeuw/gotfo"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
 	"time"
+
+	"github.com/cbeuw/GoQuiet/gqclient"
+	"github.com/cbeuw/GoQuiet/gqclient/TLS"
+	"github.com/cbeuw/gotfo"
 )
 
 // ss refers to the ss-client, remote refers to the proxy server
@@ -163,10 +164,16 @@ func main() {
 		flag.StringVar(&remotePort, "p", "443", "remotePort: proxy port, should be 443")
 		flag.StringVar(&pluginOpts, "c", "gqclient.json", "configPath: path to gqclient.json")
 		askVersion := flag.Bool("v", false, "Print the version number")
+		printUsage := flag.Bool("h", false, "Print this message")
 		flag.Parse()
 
 		if *askVersion {
 			fmt.Printf("gq-client %s\n", version)
+			return
+		}
+
+		if *printUsage {
+			flag.Usage()
 			return
 		}
 
