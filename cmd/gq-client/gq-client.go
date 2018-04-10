@@ -7,6 +7,7 @@ import (
 	"github.com/cbeuw/GoQuiet/gqclient"
 	"github.com/cbeuw/GoQuiet/gqclient/TLS"
 	"github.com/cbeuw/gotfo"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -134,8 +135,6 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 
 }
 
-var version string
-
 func main() {
 	// Should be 127.0.0.1 to listen to ss-local on this machine
 	var localHost string
@@ -167,7 +166,7 @@ func main() {
 		flag.Parse()
 
 		if *askVersion {
-			log.Println("gq-client version: " + version)
+			fmt.Printf("gq-client %s\n", version)
 			return
 		}
 

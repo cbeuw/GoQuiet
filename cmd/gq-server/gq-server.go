@@ -7,6 +7,7 @@ import (
 	"flag"
 	"github.com/cbeuw/GoQuiet/gqserver"
 	"github.com/cbeuw/gotfo"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -197,8 +198,6 @@ func usedRandomCleaner(sta *gqserver.State) {
 	}
 }
 
-var version string
-
 func main() {
 	// Should be 127.0.0.1 to listen to ss-server on this machine
 	var localHost string
@@ -224,7 +223,7 @@ func main() {
 		flag.Parse()
 
 		if *askVersion {
-			log.Println("gq-server verison: " + version)
+			fmt.Printf("gq-server %s\n", version)
 			return
 		}
 
