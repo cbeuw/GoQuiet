@@ -16,6 +16,8 @@ import (
 	"github.com/cbeuw/gotfo"
 )
 
+var version string
+
 // ss refers to the ss-client, remote refers to the proxy server
 
 type pipe interface {

@@ -17,6 +17,8 @@ import (
 	"github.com/cbeuw/gotfo"
 )
 
+var version string
+
 type pipe interface {
 	remoteToServer()
 	serverToRemote()
