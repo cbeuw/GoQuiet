@@ -162,7 +162,7 @@ func main() {
 		remotePort = os.Getenv("SS_REMOTE_PORT")
 		pluginOpts = os.Getenv("SS_PLUGIN_OPTIONS")
 	} else {
-		localHost = "127.0.0.1"
+		flag.StringVar(&localHost, "b", "127.0.0.1", "localHost: local address to bind, should be 127.0.0.1 to listen to ss-local on this machine")
 		flag.StringVar(&localPort, "l", "", "localPort: same as server_port in ss config, the plugin listens to SS using this")
 		flag.StringVar(&remoteHost, "s", "", "remoteHost: IP of your proxy server")
 		flag.StringVar(&remotePort, "p", "443", "remotePort: proxy port, should be 443")
