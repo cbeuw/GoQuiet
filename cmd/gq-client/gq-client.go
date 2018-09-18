@@ -144,6 +144,8 @@ func main() {
 	var remotePort string
 	var pluginOpts string
 
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	// These two functions do nothing for non-android
 	log_init()
 
