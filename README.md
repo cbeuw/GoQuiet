@@ -16,7 +16,7 @@ This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses ab
 
 ## Build
 
-**Build with go1.8 or 1.9 only: https://github.com/cbeuw/GoQuiet/issues/26**
+gq-client requires go1.11+. gq-server doesn't require any particularly new version of go.
 
 `make client` or `make server`
 
