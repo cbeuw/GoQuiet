@@ -47,7 +47,7 @@ or as value of `plugin` and `plugin_opts` in Shadowsocks JSON
     "password":"mypassword",
     "timeout":300,
     "method":"aes-128-gcm",
-    "fast_open":true,
+    "fast_open":false,
     "reuse_port":true,
     "no_delay":true,
     "plugin":"path-to-gqserver/client-binary",
@@ -78,8 +78,6 @@ For server:
 
 `Key` is the key. This needs to be the same as the `Key` set in `gqclient.json`
 
-`FastOpen` is used to enable or disable TCP fast open.
-
 For client:
 
 `ServerName` is the domain you want to make the GFW think you are visiting
@@ -89,8 +87,6 @@ For client:
 `TicketTimeHint` is the time needed for a session ticket to expire and a new one to be generated. Leave it as the default.
 
 `Browser` is the browser you want to **make the GFW _think_ you are using, it has NOTHING to do with the web browser or any web application you are using on your machine**. Currently support `chrome` and `firefox`.
-
-`FastOpen` is used to enable or disable TCP fast open.
 
 ## How it works
 As mentioned above, this plugin obfuscates shadowsocks' traffic as TLS traffic. This includes adding TLS Record Layer header to application data and simulating TLS handshake. Both of these are trivial to implement, but by manipulating data trasmitted in the handshake sequence, we can achieve some interesting things.
