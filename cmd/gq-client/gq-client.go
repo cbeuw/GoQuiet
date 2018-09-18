@@ -1,4 +1,4 @@
-// +build go1.8,!go1.10
+// +build go1.11
 
 package main
 
@@ -13,7 +13,6 @@ import (
 
 	"github.com/cbeuw/GoQuiet/gqclient"
 	"github.com/cbeuw/GoQuiet/gqclient/TLS"
-	"github.com/cbeuw/gotfo"
 )
 
 var version string
@@ -85,25 +84,19 @@ func initSequence(ssConn net.Conn, sta *gqclient.State) {
 	}
 	data = data[:i]
 
+	d := net.Dialer{Control: protector}
+
 	var remoteConn net.Conn
 	clientHello := TLS.ComposeInitHandshake(sta)
-	if sta.FastOpen {
-		remoteConn, err = gotfo.Dial(sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT, true, clientHello)
-		if err != nil {
-			log.Printf("Connecting and sending ClientHello to remote: %v\n", err)
-			return
-		}
-	} else {
-		remoteConn, err = gotfo.Dial(sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT, false, nil)
-		if err != nil {
-			log.Printf("Connecting to remote: %v\n", err)
-			return
-		}
-		_, err = remoteConn.Write(clientHello)
-		if err != nil {
-			log.Printf("Sending ClientHello: %v\n", err)
-			return
-		}
+	remoteConn, err = d.Dial("tcp", sta.SS_REMOTE_HOST+":"+sta.SS_REMOTE_PORT)
+	if err != nil {
+		log.Printf("Connecting to remote: %v\n", err)
+		return
+	}
+	_, err = remoteConn.Write(clientHello)
+	if err != nil {
+		log.Printf("Sending ClientHello: %v\n", err)
+		return
 	}
 
 	// Three discarded messages: ServerHello, ChangeCipherSpec and Finished
@@ -153,7 +146,6 @@ func main() {
 
 	// These two functions do nothing for non-android
 	log_init()
-	protect()
 
 	if os.Getenv("SS_LOCAL_HOST") != "" {
 		localHost = os.Getenv("SS_LOCAL_HOST")
@@ -212,7 +204,7 @@ func main() {
 	}
 
 	sta.SetAESKey()
-	listener, err := gotfo.Listen(sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT, sta.FastOpen)
+	listener, err := net.Listen("tcp", sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT)
 	if err != nil {
 		log.Fatal(err)
 	}

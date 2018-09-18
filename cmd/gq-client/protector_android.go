@@ -1,6 +1,8 @@
 // +build android
 package main
 
+// Stolen from https://github.com/shadowsocks/overture/blob/shadowsocks/core/utils/utils_android.go
+
 /*
 #include <stdlib.h>
 #include <string.h>
@@ -65,7 +67,6 @@ set_timeout(int sock)
 import "C"
 
 import (
-	"github.com/cbeuw/gotfo"
 	"log"
 	"syscall"
 )
@@ -76,27 +77,18 @@ import (
 //
 // The Android system provides an API VpnService.protect(int socketFD)
 // This tells the system to bypass the socket around the VPN.
-//
-// Unfortunately it's extremely complicated to access this API through normal syscalls,
-// the only plausible way is to somehow let the Android app know our socketFD and access this API
-// through JVM. Shadowsocks app provides an interface for this and we need to pass our socketFD
-// using a local socket to the shadowsocks app, which is what the C code is for.
-func protect() {
+func protector(network string, address string, c syscall.RawConn) error {
 	log.Println("Using Android VPN mode.")
+	fn := func(s uintptr) {
+		fd := int(s)
+		path := "protect_path"
 
-	path := "protect_path"
-
-	// There is no exported method to fetch the socket's system file descriptor in either
-	// standard lib "net" or "gotfo" package. This callback function is used to get the socket's
-	// file descriptor.
-	//
-	// Note that the callback function is not supported in the standard lib "net".
-	callback := func(fd int) {
 		socket, err := syscall.Socket(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
 		if err != nil {
 			log.Println(err)
 			return
 		}
+
 		defer syscall.Close(socket)
 
 		C.set_timeout(C.int(socket))
@@ -121,5 +113,9 @@ func protect() {
 		}
 	}
 
-	gotfo.SetFdCallback(callback)
+	if err := c.Control(fn); err != nil {
+		return err
+	}
+
+	return nil
 }
