@@ -1,5 +1,3 @@
-// +build go1.8,!go1.10
-
 package main
 
 import (
@@ -14,7 +12,6 @@ import (
 	"time"
 
 	"github.com/cbeuw/GoQuiet/gqserver"
-	"github.com/cbeuw/gotfo"
 )
 
 var version string
@@ -112,8 +109,8 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		go pair.remoteToServer()
 		go pair.serverToRemote()
 	}
-	goSS := func(data []byte) {
-		pair, err := makeSSPipe(conn, sta, data)
+	goSS := func() {
+		pair, err := makeSSPipe(conn, sta)
 		if err != nil {
 			log.Fatalf("Making connection to ss-server: %v\n", err)
 		}
@@ -163,15 +160,8 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 		}
 	}
 
-	// If FastOpen is enabled, we need some data ready to send to ss-server
-	if sta.FastOpen {
-		tempBuf := make([]byte, 20480)
-		i, _ = gqserver.ReadTillDrain(conn, tempBuf)
-		data = gqserver.PeelRecordLayer(tempBuf[:i])
-		goSS(data)
-	} else {
-		goSS(nil)
-	}
+	goSS()
+
 }
 
 func makeWebPipe(remote net.Conn, sta *gqserver.State) (*webPair, error) {
@@ -186,8 +176,8 @@ func makeWebPipe(remote net.Conn, sta *gqserver.State) (*webPair, error) {
 	return pair, nil
 }
 
-func makeSSPipe(remote net.Conn, sta *gqserver.State, data []byte) (*ssPair, error) {
-	conn, err := gotfo.Dial(sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT, sta.FastOpen, data)
+func makeSSPipe(remote net.Conn, sta *gqserver.State) (*ssPair, error) {
+	conn, err := net.Dial("tcp", sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT)
 	if err != nil {
 		return &ssPair{}, errors.New("Connection to SS server failed")
 	}
@@ -273,7 +263,7 @@ func main() {
 	go usedRandomCleaner(sta)
 
 	listen := func(addr, port string) {
-		listener, err := gotfo.Listen(addr+":"+port, sta.FastOpen)
+		listener, err := net.Listen("tcp", addr+":"+port)
 		log.Println("Listening on " + addr + ":" + port)
 		if err != nil {
 			log.Fatal(err)

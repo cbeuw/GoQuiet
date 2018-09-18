@@ -2,6 +2,5 @@
 	"ServerName":"www.bing.com",
 	"Key":"exampleconftest",
 	"TicketTimeHint":3600,
-	"Browser":"chrome",
-	"FastOpen":true
+	"Browser":"chrome"
 }

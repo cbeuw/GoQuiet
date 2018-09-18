@@ -1,5 +1,4 @@
 {
 	"WebServerAddr":"204.79.197.200:443",
-	"Key":"exampleconftest",
-	"FastOpen":true
+	"Key":"exampleconftest"
 }
