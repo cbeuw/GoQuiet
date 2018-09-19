@@ -12,6 +12,9 @@ client:
 server: 
 	go build -ldflags "-X main.version=${version}" -o ./build/gq-server ./cmd/gq-server
 
+install:
+	mv build/gq-* /usr/local/bin
+
 all: client server
 
 clean:
