@@ -1,9 +1,8 @@
 *.swp
-*.sh
 *.DS_Store
 
-/release
 /build
+/release
 
 # vscode
 /.vscode
