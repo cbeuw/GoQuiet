@@ -55,7 +55,7 @@ or as value of `plugin` and `plugin_opts` in Shadowsocks JSON
 }
 ```
 
-Alternatively, plugin_opts can be the configuration options seperated by semi-colons. For example: 
+Alternatively, plugin_opts can be the configuration options separated by semi-colons. For example: 
 
 `"plugin_opts":"WebServerAddr=204.79.197.200:443;Key=exampleconftest"`
 
