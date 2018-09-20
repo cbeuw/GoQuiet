@@ -209,18 +209,18 @@ func main() {
 	var remoteHost string
 	// Outbound listening ip, should be 443
 	var remotePort string
-	var configPath string
+	var pluginOpts string
 	if os.Getenv("SS_LOCAL_HOST") != "" {
 		localHost = os.Getenv("SS_LOCAL_HOST")
 		localPort = os.Getenv("SS_LOCAL_PORT")
 		remoteHost = os.Getenv("SS_REMOTE_HOST")
 		remotePort = os.Getenv("SS_REMOTE_PORT")
-		configPath = os.Getenv("SS_PLUGIN_OPTIONS")
+		pluginOpts = os.Getenv("SS_PLUGIN_OPTIONS")
 	} else {
 		localAddr := flag.String("r", "", "localAddr: 127.0.0.1:server_port as set in SS config")
 		flag.StringVar(&remoteHost, "s", "0.0.0.0", "remoteHost: outbound listing ip, set to 0.0.0.0 to listen to everything")
 		flag.StringVar(&remotePort, "p", "443", "remotePort: outbound listing port, should be 443")
-		flag.StringVar(&configPath, "c", "gqserver.json", "configPath: path to gqserver.json")
+		flag.StringVar(&pluginOpts, "c", "gqserver.json", "pluginOpts: path to gqserver.json or options seperated by semicolons")
 		askVersion := flag.Bool("v", false, "Print the version number")
 		printUsage := flag.Bool("h", false, "Print this message")
 		flag.Parse()
@@ -250,7 +250,7 @@ func main() {
 		Now:            time.Now,
 		UsedRandom:     map[[32]byte]int{},
 	}
-	err := sta.ParseConfig(configPath)
+	err := sta.ParseConfig(pluginOpts)
 	if err != nil {
 		log.Fatalf("Configuration file error: %v", err)
 	}
