@@ -160,7 +160,7 @@ func main() {
 		flag.StringVar(&localPort, "l", "", "localPort: same as server_port in ss config, the plugin listens to SS using this")
 		flag.StringVar(&remoteHost, "s", "", "remoteHost: IP of your proxy server")
 		flag.StringVar(&remotePort, "p", "443", "remotePort: proxy port, should be 443")
-		flag.StringVar(&pluginOpts, "c", "gqclient.json", "configPath: path to gqclient.json")
+		flag.StringVar(&pluginOpts, "c", "gqclient.json", "pluginOpts: path to gqclient.json or options seperated with semicolons")
 		askVersion := flag.Bool("v", false, "Print the version number")
 		printUsage := flag.Bool("h", false, "Print this message")
 		flag.Parse()
