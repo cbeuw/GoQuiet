@@ -1,3 +1,5 @@
+go get github.com/mitchellh/gox
+
 mkdir -p release
 
 read -p "Cleaning $PWD/release directory. Proceed? [y/n]" res
@@ -7,53 +9,26 @@ if [ ! "$res" == "y" ]; then
 fi
 
 rm -rf ./release/*
-pushd ./release
 
-declare -a os=("windows" "linux" "darwin")
-declare -a arch=("amd64" "386" "arm")
 
 if [ -z "$v" ]; then
 	echo "Version number cannot be null. Run with v=[version] release.sh"
 	exit 1
 fi
 
+output="{{.Dir}}-{{.OS}}-{{.Arch}}-$v"
+osarch="!darwin/arm !darwin/arm64"
+
 echo "Compiling:"
 
-for o in "${os[@]}"
-do
-	for a in "${arch[@]}"
-	do
-			
-		if [ $o == "darwin" -a $a == "arm" ]; then
-			continue
-		fi
+os="windows linux darwin"
+arch="amd64 386 arm arm64 mips mips64 mipsle mips64le"
+pushd cmd/gq-client
+gox -ldflags "-X main.version=${v}" -os="$os" -arch="$arch" -osarch="$osarch" -output="$output"
+mv gq-client-* ../../release
 
-
-		if [ $o == "windows" ]; then
-			oext="-win"
-		elif [ $o == "darwin" ]; then
-			oext="-mac"
-		else
-			oext="-$o"
-		fi
-
-		if [ $a == "amd64" ]; then
-			aext="64-"
-		elif [ $a == "386" ]; then
-			aext="32-"
-		else
-			aext="$a-"
-		fi
-
-		ext="$oext$aext$v"
-
-		if [ $o == "windows" ]; then
-			ext="$ext.exe"
-		fi
-
-		echo "gq-server$ext"
-		GOOS=$o GOARCH=$a go build -ldflags "-X main.version=${v}" -o "gq-server$ext" ../cmd/gq-server
-		echo "gq-client$ext"
-		GOOS=$o GOARCH=$a go build -ldflags "-X main.version=${v}" -o "gq-client$ext" ../cmd/gq-client
-	done
-done
+os="linux"
+arch="amd64 386 arm arm64"
+pushd ../gq-server
+gox -ldflags "-X main.version=${v}" -os="$os" -arch="$arch" -osarch="$osarch" -output="$output"
+mv gq-server-* ../../release
