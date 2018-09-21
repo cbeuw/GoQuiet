@@ -14,11 +14,15 @@ This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses ab
 
 **Download the binaries [here](https://github.com/cbeuw/GoQuiet/releases)**
 
+or use the automated script [here](https://gist.github.com/cbeuw/2c641917e94a6962693f138e287f1e10).
+
 ## Build
 
 gq-client requires go1.11+. gq-server doesn't require any particularly new version of go.
 
 `make client` or `make server`
+
+or use the automated script [here](https://gist.github.com/cbeuw/327173c0825a3f76679d063135cc29df) to build shadowsocks-libev and GoQuiet from source.
 
 ## Usage
 
