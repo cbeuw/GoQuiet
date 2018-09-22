@@ -14,7 +14,7 @@ This plugin has been tested on amd64 and arm Linux and amd64 Windows. It uses ab
 
 **Download the binaries [here](https://github.com/cbeuw/GoQuiet/releases)**
 
-or use the automated script [here](https://gist.github.com/cbeuw/2c641917e94a6962693f138e287f1e10).
+or if you are deploying it on a server, you can use the automated script [here](https://gist.github.com/cbeuw/2c641917e94a6962693f138e287f1e10).
 
 ## Build
 
@@ -22,7 +22,7 @@ gq-client requires go1.11+. gq-server doesn't require any particularly new versi
 
 `make client` or `make server`
 
-or use the automated script [here](https://gist.github.com/cbeuw/327173c0825a3f76679d063135cc29df) to build shadowsocks-libev and GoQuiet from source.
+or use the automated script [here](https://gist.github.com/cbeuw/327173c0825a3f76679d063135cc29df) to build shadowsocks-libev and GoQuiet server from source.
 
 ## Usage
 
@@ -84,7 +84,7 @@ ss-local -c <path-to-ss-config> -s 127.0.0.1 -p 1984 -l 1080
 
 For server:
 
-`WebServerAddr` is the redirection address and port when the incoming traffic is not from shadowsocks. It be the IP record of the `ServerName` set in `gqclient.json`
+`WebServerAddr` is the redirection address and port when the incoming traffic is not from shadowsocks. It should correspond to the IP record of the `ServerName` set in `gqclient.json`
 
 `Key` is the key. This needs to be the same as the `Key` set in `gqclient.json`
 
@@ -96,7 +96,7 @@ For client:
 
 `TicketTimeHint` is the time needed for a session ticket to expire and a new one to be generated. Leave it as the default.
 
-`Browser` is the browser you want to **make the GFW _think_ you are using, it has NOTHING to do with the web browser or any web application you are using on your machine**. Currently support `chrome` and `firefox`.
+`Browser` is the browser you want to **make the GFW _think_ you are using, it has NOTHING to do with the web browser or any web application you are using on your machine**. Currently, `chrome` and `firefox` are supported.
 
 ## How it works
 As mentioned above, this plugin obfuscates shadowsocks' traffic as TLS traffic. This includes adding TLS Record Layer header to application data and simulating TLS handshake. Both of these are trivial to implement, but by manipulating data trasmitted in the handshake sequence, we can achieve some interesting things.
