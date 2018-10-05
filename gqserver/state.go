@@ -13,7 +13,6 @@ type stateManager interface {
 	ParseConfig(string) error
 	SetAESKey(string)
 	PutUsedRandom([32]byte)
-	DelUsedRandom([32]byte)
 }
 
 // State type stores the global state of the program
@@ -87,9 +86,17 @@ func (sta *State) PutUsedRandom(random [32]byte) {
 	sta.M.Unlock()
 }
 
-// DelUsedRandom deletes a random field from the map
-func (sta *State) DelUsedRandom(random [32]byte) {
-	sta.M.Lock()
-	delete(sta.UsedRandom, random)
-	sta.M.Unlock()
+// UsedRandomCleaner clears the cache of used random fields every 12 hours
+func (sta *State) UsedRandomCleaner() {
+	for {
+		time.Sleep(12 * time.Hour)
+		now := int(sta.Now().Unix())
+		sta.M.Lock()
+		for key, t := range sta.UsedRandom {
+			if now-t > 12*3600 {
+				delete(sta.UsedRandom, key)
+			}
+		}
+		sta.M.Unlock()
+	}
 }

@@ -188,18 +188,6 @@ func makeSSPipe(remote net.Conn, sta *gqserver.State) (*ssPair, error) {
 	return pair, nil
 }
 
-func usedRandomCleaner(sta *gqserver.State) {
-	for {
-		time.Sleep(12 * time.Hour)
-		now := int(sta.Now().Unix())
-		for key, t := range sta.UsedRandom {
-			if now-t > 12*3600 {
-				sta.DelUsedRandom(key)
-			}
-		}
-	}
-}
-
 func main() {
 	// Should be 127.0.0.1 to listen to ss-server on this machine
 	var localHost string
@@ -260,7 +248,7 @@ func main() {
 	}
 
 	sta.SetAESKey()
-	go usedRandomCleaner(sta)
+	go sta.UsedRandomCleaner()
 
 	listen := func(addr, port string) {
 		listener, err := net.Listen("tcp", addr+":"+port)
