@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -130,13 +129,14 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	data := buf[:i]
 	ch, err := gqserver.ParseClientHello(data)
 	if err != nil {
+		log.Printf("+1 non SS non (or malformed) TLS traffic from %v\n", conn.RemoteAddr())
 		goWeb(data)
 		return
 	}
 
 	isSS := gqserver.IsSS(ch, sta)
 	if !isSS {
-		log.Printf("+1 non SS traffic from %v\n", conn.RemoteAddr())
+		log.Printf("+1 non SS TLS traffic from %v\n", conn.RemoteAddr())
 		goWeb(data)
 		return
 	}
@@ -167,7 +167,7 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 func makeWebPipe(remote net.Conn, sta *gqserver.State) (*webPair, error) {
 	conn, err := net.Dial("tcp", sta.WebServerAddr)
 	if err != nil {
-		return &webPair{}, errors.New("Connection to web server failed")
+		return &webPair{}, err
 	}
 	pair := &webPair{
 		conn,
@@ -179,7 +179,7 @@ func makeWebPipe(remote net.Conn, sta *gqserver.State) (*webPair, error) {
 func makeSSPipe(remote net.Conn, sta *gqserver.State) (*ssPair, error) {
 	conn, err := net.Dial("tcp", sta.SS_LOCAL_HOST+":"+sta.SS_LOCAL_PORT)
 	if err != nil {
-		return &ssPair{}, errors.New("Connection to SS server failed")
+		return &ssPair{}, err
 	}
 	pair := &ssPair{
 		conn,
@@ -198,6 +198,9 @@ func main() {
 	// Outbound listening ip, should be 443
 	var remotePort string
 	var pluginOpts string
+
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	if os.Getenv("SS_LOCAL_HOST") != "" {
 		localHost = os.Getenv("SS_LOCAL_HOST")
 		localPort = os.Getenv("SS_LOCAL_PORT")
