@@ -2,6 +2,7 @@ package gqclient
 
 import (
 	"crypto/rand"
+	"errors"
 	"io"
 	"math/big"
 	prand "math/rand"
@@ -60,6 +61,10 @@ func ReadTillDrain(conn net.Conn, buffer []byte) (n int, err error) {
 
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	for left != 0 {
+		if readPtr > len(buffer) || readPtr+left > len(buffer) {
+			err = errors.New("Reading TLS message: actual size greater than header's specification")
+			return
+		}
 		// If left > buffer size (i.e. our message got segmented), the entire MTU is read
 		// if left = buffer size, the entire buffer is all there left to read
 		// if left < buffer size (i.e. multiple messages came together),
