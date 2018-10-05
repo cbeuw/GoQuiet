@@ -111,7 +111,7 @@ func dispatchConnection(conn net.Conn, sta *gqserver.State) {
 	goSS := func() {
 		pair, err := makeSSPipe(conn, sta)
 		if err != nil {
-			log.Fatalf("Making connection to ss-server: %v\n", err)
+			log.Printf("Making connection to ss-server: %v\n", err)
 		}
 		go pair.remoteToServer()
 		go pair.serverToRemote()
