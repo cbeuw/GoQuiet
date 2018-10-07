@@ -26,8 +26,11 @@ func (c *chrome) composeExtensions(sta *gqclient.State) []byte {
 
 	makeSupportedGroups := func() []byte {
 		suppGroupListLen := []byte{0x00, 0x08}
-		suppGroup := append(makeGREASE(), []byte{0x00, 0x1d, 0x00, 0x17, 0x00, 0x18}...)
-		return append(suppGroupListLen, suppGroup...)
+		ret := make([]byte, 2+8)
+		copy(ret[0:2], suppGroupListLen)
+		copy(ret[2:4], makeGREASE())
+		copy(ret[4:], []byte{0x00, 0x1d, 0x00, 0x17, 0x00, 0x18})
+		return ret
 	}
 
 	var ext [14][]byte

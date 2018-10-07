@@ -48,9 +48,11 @@ func parseExtensions(input []byte) (ret map[[2]byte][]byte, err error) {
 func AddRecordLayer(input []byte, typ []byte, ver []byte) []byte {
 	length := make([]byte, 2)
 	binary.BigEndian.PutUint16(length, uint16(len(input)))
-	ret := append(typ, ver...)
-	ret = append(ret, length...)
-	ret = append(ret, input...)
+	ret := make([]byte, 5+len(input))
+	copy(ret[0:1], typ)
+	copy(ret[1:3], ver)
+	copy(ret[3:5], length)
+	copy(ret[5:], input)
 	return ret
 }
 

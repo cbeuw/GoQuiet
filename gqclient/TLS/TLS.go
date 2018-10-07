@@ -10,9 +10,11 @@ import (
 func AddRecordLayer(input []byte, typ []byte, ver []byte) []byte {
 	length := make([]byte, 2)
 	binary.BigEndian.PutUint16(length, uint16(len(input)))
-	ret := append(typ, ver...)
-	ret = append(ret, length...)
-	ret = append(ret, input...)
+	ret := make([]byte, 5+len(input))
+	copy(ret[0:1], typ)
+	copy(ret[1:3], ver)
+	copy(ret[3:5], length)
+	copy(ret[5:], input)
 	return ret
 }
 
@@ -29,15 +31,17 @@ type browser interface {
 
 func makeServerName(sta *gqclient.State) []byte {
 	serverName := sta.ServerName
+	serverNameListLength := make([]byte, 2)
+	binary.BigEndian.PutUint16(serverNameListLength, uint16(len(serverName)+3))
+	serverNameType := []byte{0x00} // host_name
 	serverNameLength := make([]byte, 2)
 	binary.BigEndian.PutUint16(serverNameLength, uint16(len(serverName)))
-	serverNameType := []byte{0x00} // host_name
-	var ret []byte
-	ret = append(serverNameType, serverNameLength...)
-	ret = append(ret, serverName...)
-	serverNameListLength := make([]byte, 2)
-	binary.BigEndian.PutUint16(serverNameListLength, uint16(len(ret)))
-	return append(serverNameListLength, ret...)
+	ret := make([]byte, 2+1+2+len(serverName))
+	copy(ret[0:2], serverNameListLength)
+	copy(ret[2:3], serverNameType)
+	copy(ret[3:5], serverNameLength)
+	copy(ret[5:], serverName)
+	return ret
 }
 
 func makeSessionTicket(sta *gqclient.State) []byte {
@@ -46,9 +50,9 @@ func makeSessionTicket(sta *gqclient.State) []byte {
 }
 
 func makeNullBytes(length int) []byte {
-	var ret []byte
+	ret := make([]byte, length)
 	for i := 0; i < length; i++ {
-		ret = append(ret, 0x00)
+		ret[i] = 0x00
 	}
 	return ret
 }
@@ -57,9 +61,11 @@ func makeNullBytes(length int) []byte {
 func addExtRec(typ []byte, data []byte) []byte {
 	length := make([]byte, 2)
 	binary.BigEndian.PutUint16(length, uint16(len(data)))
-	var ret []byte
-	ret = append(typ, length...)
-	return append(ret, data...)
+	ret := make([]byte, 2+2+len(data))
+	copy(ret[0:2], typ)
+	copy(ret[2:4], length)
+	copy(ret[4:], data)
+	return ret
 }
 
 // ComposeInitHandshake composes ClientHello with record layer

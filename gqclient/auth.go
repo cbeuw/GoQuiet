@@ -23,5 +23,8 @@ func MakeRandomField(sta *State) []byte {
 	goal := h.Sum(nil)[0:16]
 	iv := CryptoRandBytes(16)
 	rest := encrypt(iv, sta.AESKey, goal)
-	return append(iv, rest...)
+	ret := make([]byte, 32)
+	copy(ret, iv)
+	copy(ret[16:], rest)
+	return ret
 }
