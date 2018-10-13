@@ -3,8 +3,10 @@ package gqclient
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
+	"io"
 )
 
 func encrypt(iv []byte, key []byte, plaintext []byte) []byte {
@@ -21,7 +23,8 @@ func MakeRandomField(sta *State) []byte {
 	t := int(sta.Now().Unix()) / (12 * 60 * 60)
 	h.Write([]byte(fmt.Sprintf("%v", t) + sta.Key))
 	goal := h.Sum(nil)[0:16]
-	iv := CryptoRandBytes(16)
+	iv := make([]byte, 16)
+	io.ReadFull(rand.Reader, iv)
 	rest := encrypt(iv, sta.AESKey, goal)
 	ret := make([]byte, 32)
 	copy(ret, iv)

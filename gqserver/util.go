@@ -25,10 +25,7 @@ func BtoInt(b []byte) int {
 func PsudoRandBytes(length int, seed int64) []byte {
 	prand.Seed(seed)
 	ret := make([]byte, length)
-	for i := 0; i < length; i++ {
-		randByte := byte(prand.Intn(256))
-		ret[i] = randByte
-	}
+	prand.Read(ret)
 	return ret
 }
 
@@ -50,7 +47,7 @@ func ReadTillDrain(conn net.Conn, buffer []byte) (n int, err error) {
 	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 	for left != 0 {
 		if readPtr > len(buffer) || readPtr+left > len(buffer) {
-			err = errors.New("Reading TLS message: actual size greater than header's specification")
+			err = errors.New("Reading TLS message: message size greater than buffer")
 			return
 		}
 		// If left > buffer size (i.e. our message got segmented), the entire MTU is read
@@ -65,8 +62,6 @@ func ReadTillDrain(conn net.Conn, buffer []byte) (n int, err error) {
 		readPtr += i
 	}
 	conn.SetReadDeadline(time.Time{})
-
 	n = 5 + dataLength
-	buffer = buffer[:n]
 	return
 }

@@ -3,6 +3,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"io"
@@ -178,7 +179,9 @@ func main() {
 		log.Printf("Starting standalone mode. Listening for ss on %v:%v\n", localHost, localPort)
 	}
 
-	opaque := gqclient.BtoInt(gqclient.CryptoRandBytes(32))
+	opaqueB := make([]byte, 32)
+	io.ReadFull(rand.Reader, opaqueB)
+	opaque := gqclient.BtoInt(opaqueB)
 	sta := &gqclient.State{
 		SS_LOCAL_HOST:  localHost,
 		SS_LOCAL_PORT:  localPort,
