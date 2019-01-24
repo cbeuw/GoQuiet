@@ -4,6 +4,8 @@
 # GoQuiet
 A shadowsocks plugin that obfuscates the traffic as normal HTTPS traffic and disguises the proxy server as a normal webserver.
 
+**This software has been proven stable but it's not frequently maintained. Please check out the upgrade to this project [Cloak](https://github.com/cbeuw/Cloak), which provides 10% to 50% faster web page loading and also has multi-user support**
+
 The fundamental idea of obfuscating shadowsocks traffic as TLS traffic is not original. [simple-obfs](https://github.com/shadowsocks/simple-obfs) and ShadowsocksR's `tls1.2_ticket_auth` mode have shown this to be effective. This plugin has made [improvements](https://github.com/cbeuw/GoQuiet/wiki/Advantages-over-similar-obfuscators) so that the goal of this plugin is  **to make indiscriminate blocking of HTTPS servers (or even IP ranges) with high traffic the only effective way of stopping people from using shadowsocks.**
 
 Beyond the benefit of bypassing the firewall, it can also **cheat traffic restrictions imposed by ISP. See [here](https://github.com/cbeuw/GoQuiet/wiki/A-potential-gateway-to-free-internet-after-Net-Neutrality-Repeal).**
