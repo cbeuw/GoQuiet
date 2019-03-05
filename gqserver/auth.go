@@ -26,14 +26,13 @@ func IsSS(input *ClientHello, sta *State) bool {
 
 	sta.M.Lock()
 	used := sta.UsedRandom[random]
+	sta.UsedRandom[random] = int(sta.Now().Unix())
 	sta.M.Unlock()
 
 	if used != 0 {
 		log.Println("Replay! Duplicate random")
 		return false
 	}
-
-	sta.PutUsedRandom(random)
 
 	h := sha256.New()
 	t := int(sta.Now().Unix()) / (12 * 60 * 60)

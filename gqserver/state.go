@@ -79,13 +79,6 @@ func (sta *State) SetAESKey() {
 	sta.AESKey = h.Sum(nil)
 }
 
-// PutUsedRandom adds a random field into map UsedRandom
-func (sta *State) PutUsedRandom(random [32]byte) {
-	sta.M.Lock()
-	sta.UsedRandom[random] = int(sta.Now().Unix())
-	sta.M.Unlock()
-}
-
 // UsedRandomCleaner clears the cache of used random fields every 12 hours
 func (sta *State) UsedRandomCleaner() {
 	for {
