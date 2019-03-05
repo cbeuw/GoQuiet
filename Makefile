@@ -7,10 +7,14 @@ version=$(shell ver=$$(git log -n 1 --pretty=oneline --format=%D | awk -F, '{pri
 	echo $$ver)
 
 client: 
-	go build -ldflags "-X main.version=${version}" -o ./build/gq-client ./cmd/gq-client 
+	mkdir -p build
+	go build -ldflags "-X main.version=${version}" ./cmd/gq-client 
+	mv gq-client* ./build
 
 server: 
-	go build -ldflags "-X main.version=${version}" -o ./build/gq-server ./cmd/gq-server
+	mkdir -p build
+	go build -ldflags "-X main.version=${version}" ./cmd/gq-server
+	mv gq-server* ./build
 
 install:
 	mv build/gq-* /usr/local/bin
