@@ -140,3 +140,12 @@ If you want to run a functional web server on your proxy machine, you need it to
 https://dcamero.azurewebsites.net/shadowsocks-goquiet.html - Detailed guide about "How to make your traffic look like simple tls traffic"
 
 Or you can set the `WebServerAddr` field in the server config file as an external IP, and set the `ServerName` field in the client config file as the domain name of that ip. Because of the [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication) extension in the `ClientHello` message, the firewall knows the domain name someone is trying to access. If the firewall sends a `ClientHello` message to our proxy server with an SNI we used, the destination IP specified in `WebServerAddr` will receive this `ClientHello` message and the web server on that machine will check the SNI entry against its configuration. If they don't match, the web server will refuse to connect and show an error message, which could expose the fact that our proxy machine is not running a normal TLS web server. If you match the external IP with its domain name (e.g. `204.79.197.200` to `www.bing.com`), our proxy server will become, effectively to the observer, a server owned by that domain.
+
+## Support me
+If you find this project useful, donations are greatly appreciated!
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=SAUYKGSREP8GL&source=url)
+
+BTC: `bc1q59yvpnh0356qq9vf0j2y7hx36t9ysap30spx9h`
+
+ETH: `0x8effF29a8F9bD38A367580527AC303972c92b60c`
