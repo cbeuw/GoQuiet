@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"time"
+	"strings"
 
 	"github.com/cbeuw/GoQuiet/gqclient"
 	"github.com/cbeuw/GoQuiet/gqclient/TLS"
@@ -193,6 +194,12 @@ func main() {
 	err := sta.ParseConfig(pluginOpts)
 	if err != nil {
 		log.Fatal(err)
+	}
+	if strings.IndexByte(sta.SS_LOCAL_HOST, ':') != -1 {
+	    sta.SS_LOCAL_HOST = "[" + sta.SS_LOCAL_HOST + "]"
+	}
+	if strings.IndexByte(sta.SS_REMOTE_HOST, ':') != -1 {
+	    sta.SS_REMOTE_HOST = "[" + sta.SS_REMOTE_HOST + "]"
 	}
 
 	if sta.SS_LOCAL_PORT == "" {

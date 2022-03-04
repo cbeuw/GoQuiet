@@ -245,6 +245,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Configuration file error: %v", err)
 	}
+	if strings.IndexByte(sta.SS_LOCAL_HOST, ':') != -1 {
+	    sta.SS_LOCAL_HOST = "[" + sta.SS_LOCAL_HOST + "]"
+	}
+	if strings.IndexByte(sta.SS_REMOTE_HOST, ':') != -1 {
+	    sta.SS_REMOTE_HOST = "[" + sta.SS_REMOTE_HOST + "]"
+	}
 
 	if sta.Key == "" {
 		log.Fatal("Key cannot be empty")
@@ -272,10 +278,10 @@ func main() {
 	// When listening on an IPv6 and IPv4, SS gives REMOTE_HOST as e.g. ::|0.0.0.0
 	listeningIP := strings.Split(sta.SS_REMOTE_HOST, "|")
 	for i, ip := range listeningIP {
-		if net.ParseIP(ip).To4() == nil {
+		// if net.ParseIP(ip).To4() == nil {
 			// IPv6 needs square brackets
-			ip = "[" + ip + "]"
-		}
+			// ip = "[" + ip + "]"
+		// }
 
 		// The last listener must block main() because the program exits on main return.
 		if i == len(listeningIP)-1 {
